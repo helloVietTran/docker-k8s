@@ -1,3 +1,65 @@
+server:
+  port: 8081
+
 spring:
+  main:
+    web-application-type: servlet
   application:
-    name: readingstoryweb
+    name: webmanh
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app_db?prepareThreshold=0
+    username: app_user
+    password: app_password
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 600000
+      connection-timeout: 30000
+      auto-commit: false
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # dev only
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: numberzero0909@gmail.com
+    password: <app-pass>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.apache.kafka: ERROR
+
+app:
+  frontend:
+    base-url: http://localhost:5173
+
+  jwt:
+    secretKey: SS8qGu3cV5B9sID37ML8TuZRyyzJcyrVGfPBASvqbbLNUW7Zqzz6401nBgxenbmC
+    access-duration: 3600 # in seconds
+    refreshable-duration: 36000

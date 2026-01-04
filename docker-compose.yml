@@ -1,33 +1,4 @@
-version: "3.8"
-
 services:
-  postgres-master:
-    image: bitnami/postgresql:latest
-    container_name: pg-master
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=master
-      - POSTGRESQL_USERNAME=appuser
-      - POSTGRESQL_PASSWORD=apppass
-      - POSTGRESQL_DATABASE=webmanh
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
-    volumes:
-      - pg_master_data:/bitnami/postgresql
-
-  postgres-slave:
-    image: bitnami/postgresql:latest
-    container_name: pg-slave
-    depends_on:
-      - postgres-master
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_MASTER_HOST=postgres-master
-      - POSTGRESQL_MASTER_PORT_NUMBER=5432
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
-      - POSTGRESQL_PASSWORD=apppass
-    volumes:
-      - pg_slave_data:/bitnami/postgresql
   load_balancer:
     image: nginx:stable-perl
     ports:
@@ -36,6 +7,137 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro # sau khi tìm hiểu sâu hơn về nginx, ta sẽ đưa nó vào file config khác
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: app_user
+      MONGO_INITDB_ROOT_PASSWORD: app_password
+      MONGO_INITDB_DATABASE: app_db
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mongonet
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # Cấu hình định danh
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      
+      # scale
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      
+      # partitions
+      KAFKA_NUM_PARTITIONS: 4
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # PostgreSQL Master-Slave Replication with Pgpool-II Load Balancing
+  postgresql-master:
+    image: bitnami/postgresql:latest
+    container_name: pg-master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_USERNAME=app_user
+      - POSTGRESQL_PASSWORD=app_password
+      - POSTGRESQL_DATABASE=app_db
+    volumes:
+      - pg_master_data:/bitnami/postgresql
+    networks:
+      - pgnet
+
+  postgresql-slave1:
+    image: bitnami/postgresql:latest
+    container_name: pg-slave1
+    depends_on:
+      - postgresql-master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=postgresql-master
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_PASSWORD=app_password
+    volumes:
+      - pg_slave1_data:/bitnami/postgresql
+    networks:
+      - pgnet
+
+  postgresql-slave2:
+    image: bitnami/postgresql:latest
+    container_name: pg-slave2
+    depends_on:
+      - postgresql-master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=postgresql-master
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_PASSWORD=app_password
+    volumes:
+      - pg_slave2_data:/bitnami/postgresql
+    networks:
+      - pgnet
+
+  pgpool:
+    image: bitnamilegacy/pgpool:4.6.3
+    container_name: pgpool
+    depends_on:
+      - postgresql-master
+      - postgresql-slave1
+      - postgresql-slave2
+    ports:
+      - "5432:5432"
+    environment:
+      - PGPOOL_BACKEND_NODES=0:postgresql-master:5432,1:postgresql-slave1:5432,2:postgresql-slave2:5432
+      - PGPOOL_SR_CHECK_USER=repl_user
+      - PGPOOL_SR_CHECK_PASSWORD=repl_password
+
+      - PGPOOL_POSTGRES_USERNAME=app_user
+      - PGPOOL_POSTGRES_PASSWORD=app_password
+
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_ENABLE_STATEMENT_LOAD_BALANCING=yes
+
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=admin_password
+
+      - PGPOOL_ENABLE_FAILOVER=yes
+      - PGPOOL_FAILOVER_ON_BACKEND_ERROR=yes
+
+    networks:
+      - pgnet
+
 volumes:
   pg_master_data:
-  pg_slave_data:
+  pg_slave1_data:
+  pg_slave2_data:
+  mongo_data:
+  kafka_data:
+    driver: local
+
+networks:
+  pgnet:
+    driver: bridge
+  mongonet:
+    driver: bridge

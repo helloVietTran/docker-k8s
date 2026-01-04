@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chào mừng đến với WebManh</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 6px;">
+    <h2 style="color: #333333;">
+        Chào mừng <span th:text="${username}">User</span> 👋
+    </h2>
+
+    <p style="color: #555555;">
+        Cảm ơn bạn đã đăng ký tài khoản tại <strong>WebManh</strong>.
+    </p>
+
+    <p style="color: #555555;">
+        Thông tin tài khoản của bạn:
+    </p>
+
+    <ul style="color: #555555;">
+        <li>Email: <span th:text="${email}">example@email.com</span></li>
+        <li>Tên người dùng: <span th:text="${username}">username</span></li>
+    </ul>
+
+    <p style="color: #555555;">
+        Chúc bạn có trải nghiệm tuyệt vời cùng WebManh!
+    </p>
+
+    <p style="margin-top: 30px; color: #777777;">
+        Trân trọng,<br>
+        <strong>Đội ngũ WebManh</strong>
+    </p>
+</div>
+</body>
+</html>

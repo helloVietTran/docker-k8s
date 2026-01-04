@@ -1,4 +1,4 @@
-package com.vietanh.readingstoryweb;
+package com.vietanh.webmanh;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
