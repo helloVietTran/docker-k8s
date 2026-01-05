@@ -17,6 +17,10 @@ import java.time.Instant;
 @Table(name = "reset_password_token")
 public class ResetPasswordToken  {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Integer reset_password_token_id;
+
+    @Column(columnDefinition = "TEXT")
     String hashedToken;
 
     @Column(nullable = false)

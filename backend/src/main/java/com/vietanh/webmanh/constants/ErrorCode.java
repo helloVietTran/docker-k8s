@@ -12,6 +12,9 @@ public enum ErrorCode {
     PASSWORDS_DO_NOT_MATCH(41, "Password and confirmPassword not match", HttpStatus.BAD_REQUEST),
     SEND_WELCOME_MAIL_FAILED(81, "Send welcome mail failed", HttpStatus.BAD_REQUEST),
 
+    THIS_PROPERTY_IS_NOT_ALLOW_NULL(121, "This property is not allow null", HttpStatus.BAD_REQUEST),
+
+
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1003, "Length of password must be between 6 and 20 characters", HttpStatus.BAD_REQUEST),
@@ -32,7 +35,7 @@ public enum ErrorCode {
     STORY_NOT_EXISTED(1050, "Story not existed", HttpStatus.NOT_FOUND),
     CHAPTER_NOT_EXISTED(1060, "Chapter not existed", HttpStatus.NOT_FOUND),
     LEVEL_NOT_EXISTED(1070, "Level record not existed", HttpStatus.NOT_FOUND),
-    TOKEN_NOT_EXISTED(1080, "Reset password token not existed", HttpStatus.BAD_REQUEST),
+    TOKEN_NOT_EXISTED(1080, "Token not existed", HttpStatus.BAD_REQUEST),
     COMMENT_NOT_EXISTED(1090, "Comment not existed", HttpStatus.NOT_FOUND),
     ROLE_NOT_EXISTED(1100, "Role not existed", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_EXISTED(1110, "Permission not existed", HttpStatus.NOT_FOUND),

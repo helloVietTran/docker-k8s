@@ -21,7 +21,9 @@ public interface AuthenticationService {
 
     void changePassword(ChangePasswordRequest request);
 
-    void generateResetToken();
+    void forgetPassword(ForgetPasswordRequest request);
+
+    void changePasswordWithResetToken(ChangePasswordWithTokenRequest request) throws ParseException;
 
     void verifyAccount(VerifyAccountRequest request);
 }

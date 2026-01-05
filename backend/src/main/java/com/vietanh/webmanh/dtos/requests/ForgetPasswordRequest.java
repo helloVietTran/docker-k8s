@@ -1,6 +1,6 @@
 package com.vietanh.webmanh.dtos.requests;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RefreshTokenRequest {
-    @NotNull(message = "THIS_PROPERTY_IS_NOT_ALLOW_NULL")
-    String refreshToken;
+public class ForgetPasswordRequest {
+    @Email(message = "EMAIL_INVALID")
+    String email;
 }

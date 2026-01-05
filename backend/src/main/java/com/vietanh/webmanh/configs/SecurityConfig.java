@@ -35,10 +35,16 @@ public class SecurityConfig {
     String FE_DOMAIN;
 
     private final String[] GET_METHOD_PUBLIC_ENDPOINTS = {
-
+            "/", "/actuator/**"
     };
     private final String[] POST_METHOD_PUBLIC_ENDPOINTS = {
-
+            "/auth/register", "/auth/login", "/auth/refresh", "/auth/introspect",
+            "/auth/forget-password",
+            "/mail/send-verify-mail"
+    };
+    private final String[] PUT_METHOD_PUBLIC_ENDPOINTS = {
+            "/auth/change-password", "/auth/change-password/reset-token",
+            "/auth/verify-account"
     };
     private final String[] PATCH_METHOD_PUBLIC_ENDPOINTS = {
 
@@ -52,9 +58,12 @@ public class SecurityConfig {
         httpSecurity.cors(Customizer.withDefaults());
 
         httpSecurity
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, POST_METHOD_PUBLIC_ENDPOINTS)
-                        .permitAll()
+                .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.GET, GET_METHOD_PUBLIC_ENDPOINTS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, POST_METHOD_PUBLIC_ENDPOINTS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.PUT, PUT_METHOD_PUBLIC_ENDPOINTS)
                         .permitAll()
                         .requestMatchers(HttpMethod.PATCH, PATCH_METHOD_PUBLIC_ENDPOINTS)
                         .permitAll()

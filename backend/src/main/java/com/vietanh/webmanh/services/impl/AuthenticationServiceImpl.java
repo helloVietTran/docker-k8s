@@ -9,6 +9,7 @@ import com.vietanh.webmanh.constants.ErrorCode;
 import com.vietanh.webmanh.constants.EventTopic;
 import com.vietanh.webmanh.dbs.postgres.models.*;
 import com.vietanh.webmanh.dbs.postgres.repositories.*;
+import com.vietanh.webmanh.dtos.events.UserForgotEvent;
 import com.vietanh.webmanh.dtos.requests.*;
 import com.vietanh.webmanh.dtos.responses.AuthenticationResponse;
 import com.vietanh.webmanh.dtos.responses.IntrospectResponse;
@@ -70,6 +71,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Value("${app.jwt.refreshable-duration}")
     protected long REFRESHABLE_DURATION;
 
+    @NonFinal
+    @Value("${app.frontend.base-url}")
+    private String baseUrl;
+
     @Override
     public UserResponse register(RegisterRequest request) {
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
@@ -91,6 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public IntrospectResponse introspect(TokenRequest request) {
         var token = request.getAccessToken();
+
 
         boolean isValid = true;
 
@@ -157,21 +163,44 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void changePassword(ChangePasswordRequest request) {
-        Integer userId = AuthUtil.getCurrentUserId();
+    public void forgetPassword(ForgetPasswordRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        if(userOptional.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
 
-        // check token
+        User user = userOptional.get();
+
+        String token = generateToken(user, false);
+        Instant now = Instant.now();
+
+        ResetPasswordToken resetPasswordToken = ResetPasswordToken.builder()
+                .userId(user.getUserId())
+                .hashedToken(token)
+                .createdAt(now)
+                .expiryAt(now.plusSeconds(10*60)) // 10 phút
+                .build();
+
+        resetPasswordTokenRepository.save(resetPasswordToken);
+
+        String resetUrl = baseUrl + "/change-password/resetToken?token=" + token;
+        // gửi mail
+        eventPublisher.publish(EventTopic.USER_FORGOT_EVENT.getTopicName(),
+                new UserForgotEvent(user.getEmail(), user.getUsername(), resetUrl));
+    }
+
+    @Override
+    public void changePasswordWithResetToken(ChangePasswordWithTokenRequest request) throws ParseException {
+        SignedJWT signedJWT = verifyToken(request.getResetToken(), false);
+        Integer userId = Integer.parseInt(signedJWT.getJWTClaimsSet().getSubject());
+
         Optional<ResetPasswordToken> tokenOptional =
                 resetPasswordTokenRepository.findLatestValidTokenByUserId(userId, Instant.now());
-        if (tokenOptional.isEmpty()) throw new AppException(ErrorCode.INVALID_TOKEN);
+        if (tokenOptional.isEmpty()) throw new AppException(ErrorCode.TOKEN_NOT_EXISTED);
+
         ResetPasswordToken resetPasswordToken = tokenOptional.get();
-
-        if (!passwordEncoder.matches(request.getResetToken(), resetPasswordToken.getHashedToken()))
+        if (!resetPasswordToken.getHashedToken().equals(request.getResetToken()))
             throw new AppException(ErrorCode.INVALID_TOKEN);
-
-        // check confirm password
-        if (!request.getPassword().equals(request.getConfirmPassword()))
-            throw new AppException(ErrorCode.INVALID_CONFIRM_PASSWORD);
 
         User user = userRepository
                 .findById(userId)
@@ -186,26 +215,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void generateResetToken() {
-        Integer userId = AuthUtil.getCurrentUserId();
-        boolean isExists = userRepository.existsById(userId);
+    public void changePassword(ChangePasswordRequest request) {
 
-        if(!isExists){
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if(userOptional.isEmpty()){
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
 
-        String token = UUID.randomUUID().toString();
-        Instant now = Instant.now();
+        User user = userOptional.get();
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword()))
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
 
-        ResetPasswordToken resetPasswordToken = ResetPasswordToken.builder()
-                .userId(userId)
-                .hashedToken(passwordEncoder.encode(token))
-                .createdAt(now)
-                .expiryAt(now.plusSeconds(10*60)) // 10 phút
-                .build();
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        resetPasswordTokenRepository.save(resetPasswordToken);
-        // topic mail
+        userRepository.save(user);
     }
 
     // mail ảo => không có mail

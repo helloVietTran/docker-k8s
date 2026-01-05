@@ -7,7 +7,7 @@ import lombok.Getter;
 public enum EventTopic {
 
     USER_CREATED("user.created"),
-    USER_VERIFICATION_REQUESTED("user.verify_requested");
+    USER_FORGOT_EVENT("user.forgot");
 
     private final String topicName;
 

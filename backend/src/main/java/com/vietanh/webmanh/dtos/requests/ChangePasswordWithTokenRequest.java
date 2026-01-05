@@ -1,8 +1,9 @@
 package com.vietanh.webmanh.dtos.requests;
 
 import com.vietanh.webmanh.constrains.FieldMatch;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,13 +13,12 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldMatch(first = "password", second = "confirmPassword", message = "PASSWORDS_DO_NOT_MATCH")
-public class ChangePasswordRequest {
-    @Size(min = 6, max = 20, message = "INVALID_PASSWORD")
-    String oldPassword;
-
+public class ChangePasswordWithTokenRequest {
     @Size(min = 6, max = 20, message = "INVALID_PASSWORD")
     String password;
     String confirmPassword;
 
-    String email;
+    @NotNull(message = "THIS_PROPERTY_IS_NOT_ALLOW_NULL")
+    String resetToken;
+
 }
