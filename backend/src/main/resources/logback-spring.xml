@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- folder log -->
     <property name="LOG_PATH" value="logs"/>
     <property name="APP_NAME" value="webmanh"/>
 
@@ -10,14 +9,12 @@
     <property name="LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | ${APP_NAME} | [%thread] | %logger{36} | %msg%n"/>
 
-    <!-- ====== CONSOLE ====== -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
-    <!-- ====== FILE (ALL LOGS) ====== -->
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/app.log</file>
@@ -32,7 +29,6 @@
         </encoder>
     </appender>
 
-    <!-- ====== ERROR FILE ====== -->
     <appender name="ERROR_FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/app-error.log</file>
@@ -53,7 +49,6 @@
         </filter>
     </appender>
 
-    <!-- ====== ROOT LOGGER ====== -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>

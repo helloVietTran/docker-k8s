@@ -35,12 +35,13 @@ public class SecurityConfig {
     String FE_DOMAIN;
 
     private final String[] GET_METHOD_PUBLIC_ENDPOINTS = {
-            "/", "/actuator/**"
+            "/", "/actuator/**", "/error-report"
     };
     private final String[] POST_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/register", "/auth/login", "/auth/refresh", "/auth/introspect",
             "/auth/forget-password",
-            "/mail/send-verify-mail"
+            "/mail/send-verify-mail",
+            "/error-report"
     };
     private final String[] PUT_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/change-password", "/auth/change-password/reset-token",

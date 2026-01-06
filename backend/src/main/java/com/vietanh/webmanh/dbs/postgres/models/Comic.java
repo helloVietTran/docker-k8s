@@ -65,7 +65,7 @@ public class Comic {
     @Builder.Default
     int newestChapter = 0;
 
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "comic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<Chapter> chapters;
 
     @ManyToMany

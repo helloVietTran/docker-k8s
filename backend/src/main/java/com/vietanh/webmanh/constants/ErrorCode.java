@@ -13,7 +13,8 @@ public enum ErrorCode {
     SEND_WELCOME_MAIL_FAILED(81, "Send welcome mail failed", HttpStatus.BAD_REQUEST),
 
     THIS_PROPERTY_IS_NOT_ALLOW_NULL(121, "This property is not allow null", HttpStatus.BAD_REQUEST),
-
+    ERROR_REPORTER_NOT_EXISTED(42, "This property is not allow null", HttpStatus.BAD_REQUEST),
+    ERROR_ALREADY_REPORTED(43, "Error already report", HttpStatus.BAD_REQUEST),
 
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),

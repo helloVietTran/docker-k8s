@@ -26,8 +26,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://app_user:app_password@localhost:27017/app_db?authSource=admin
-      auto-index-creation: true
+      uri: mongodb://app_user:app_password@localhost:27017/app_db?authSource=app_user # root user luôn ở admin
 
   mongodb:
     connection-pool:
