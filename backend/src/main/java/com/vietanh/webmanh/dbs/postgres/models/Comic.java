@@ -5,6 +5,8 @@ import com.vietanh.webmanh.constants.StoryStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "comic")
-public class Comic {
+public class Comic extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer comicId;
@@ -27,13 +29,15 @@ public class Comic {
     String comicName;
 
     String otherName;
-    // authorName
+
+    String authorName; // denormalization
 
     @Enumerated(EnumType.STRING)
     StoryStatus status;
 
-    @Column(nullable = false)
-    String comicSrc;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]", nullable = false)
+    List<String> coverSrc;
 
     @Column(columnDefinition = "TEXT")
     String description = "";
@@ -59,39 +63,42 @@ public class Comic {
     @Builder.Default
     int likeCount = 0;
 
-    @Enumerated(EnumType.STRING)
-    Gender gender; // null là cả 2
-
     @Builder.Default
     int newestChapter = 0;
 
+    @Enumerated(EnumType.STRING)
+    Gender gender; // null là cả 2
+
     @OneToMany(mappedBy = "comic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<Chapter> chapters;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "author_id",
+            foreignKey = @ForeignKey(name = "fk_comic_author"),
+            nullable = true
+    )
+    User author;
 
     @ManyToMany
     Set<Genre> genres;
 
     String slug;
 
-    @PrePersist
-    public void generateSlug() {
-        this.slug = convertToSlug(this.comicName);
-    }
-
-    String convertToSlug(String input) {
-        if (input == null || input.isEmpty()) {
-            return null;
+    public void generateSelfComicSlug() {
+        if (this.comicName == null || this.comicName.isEmpty()) {
+            return;
         }
 
-        input = input.replaceAll("đ", "d").replaceAll("Đ", "D");
+        this.comicName = this.comicName.replaceAll("đ", "d").replaceAll("Đ", "D");
 
-        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        String normalized = Normalizer.normalize(this.comicName, Normalizer.Form.NFD);
         String noDiacritics = normalized.replaceAll("\\p{M}", "");
 
         String slug = noDiacritics.replaceAll("[^a-zA-Z0-9\\s]", "");
         slug = slug.trim().replaceAll("\\s+", "-");
 
-        return slug.toLowerCase();
+        this.slug = slug.toLowerCase();
     }
 }
 

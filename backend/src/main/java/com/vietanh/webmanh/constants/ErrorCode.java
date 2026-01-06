@@ -16,6 +16,9 @@ public enum ErrorCode {
     ERROR_REPORTER_NOT_EXISTED(42, "This property is not allow null", HttpStatus.BAD_REQUEST),
     ERROR_ALREADY_REPORTED(43, "Error already report", HttpStatus.BAD_REQUEST),
 
+    REQUIRED_IMAGE(51, "Image is required", HttpStatus.BAD_REQUEST),
+    FILE_STORAGE_ERROR(55, "Storage file error", HttpStatus.INTERNAL_SERVER_ERROR),
+
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1003, "Length of password must be between 6 and 20 characters", HttpStatus.BAD_REQUEST),

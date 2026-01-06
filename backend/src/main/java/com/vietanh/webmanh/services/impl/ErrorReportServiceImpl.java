@@ -48,7 +48,7 @@ public class ErrorReportServiceImpl implements ErrorReportService {
 
         ErrorReport entity = reportMapper.toErrorReporter(request);
         entity.setCreatedAt(Instant.now());
-
+        //notify author or admin
         return reportMapper.toErrorReporterResponse(
                 reportRepository.save(entity)
         );

@@ -44,4 +44,7 @@ public class User extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_name"))
     Set<Role> roles;
+
+    @OneToMany(mappedBy = "author")
+    Set<Comic> comics;
 }

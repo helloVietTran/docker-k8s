@@ -18,7 +18,6 @@ public class ChangePasswordWithTokenRequest {
     String password;
     String confirmPassword;
 
-    @NotNull(message = "THIS_PROPERTY_IS_NOT_ALLOW_NULL")
+    @NotNull
     String resetToken;
-
 }

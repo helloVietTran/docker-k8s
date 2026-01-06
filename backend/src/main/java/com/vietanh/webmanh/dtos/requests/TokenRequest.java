@@ -10,6 +10,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TokenRequest {
-    @NotNull(message = "THIS_PROPERTY_IS_NOT_ALLOW_NULL")
+    @NotNull
     String accessToken;
 }
