@@ -13,13 +13,13 @@ Dự án website đọc truyện sinh ra để đáp ứng nhu cầu giải trí
 
 **Frontend:** React.js, TaiwindCSS, Shacdn UI, Redux Toolkit, React Query
 
-**Backend:** Spring Boot, Spring Security, Spring JPA
+**Backend:** Spring Boot, Spring Security, Spring Data, Spring Thymeleaf, OpenCV
 
 **Database:** PostgreSQL, MongoDB, Redis
 
-**Devops:** Docker, Github Actions, Jenkins
+**Devops:** Docker
 
-**Design Pattern:** Singleton
+**Design Pattern:** Singleton, Specification Pattern + Builder Pattern
 
 ## 🏗  Kiến trúc hệ thống
 
@@ -34,15 +34,35 @@ Hệ thống được thiết kế theo kiến trúc phân tán:
 ## 📦 Hướng dẫn cài đặt
 
 ### Yêu cầu hệ thống
-- Docker
+- Docker 4.55.0
 - Java JDK 17+
 - Maven 3.7+
 - Node.js v22+
   
-### Các bước triển khai
+### Các bước chạy dự án
 1. **Clone dự án:**
-   ```bash
+```bash
    git clone https://github.com/helloVietTran/graduate-project
+```
+2. **Thiết lập môi trường phát triển:**
+```
+   cd graduate-project
+   docker compose up -d
+```
 
+3. **Run backend:**
+  
+```
+   cd backend
+   mvn clean install
+   mvn spring-boot:run
+```
 
+4. **Run frontend:**
+
+```
+   cd frontend
+   npm install
+   npm run dev
+```
 

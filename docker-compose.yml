@@ -15,11 +15,11 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: app_user
-      MONGO_INITDB_ROOT_PASSWORD: app_password
-      MONGO_INITDB_DATABASE: app_db
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root_password
     volumes:
       - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # cấp quyền user app_user
     networks:
       - mongonet
   kafka:
