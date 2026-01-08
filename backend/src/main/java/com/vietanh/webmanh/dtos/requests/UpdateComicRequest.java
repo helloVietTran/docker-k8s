@@ -1,15 +1,12 @@
 package com.vietanh.webmanh.dtos.requests;
 
-
 import com.vietanh.webmanh.constants.Gender;
 import com.vietanh.webmanh.constants.StoryStatus;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotNull;
+import com.vietanh.webmanh.constraints.ValidStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
 import java.util.Set;
 
 @Data
@@ -17,23 +14,17 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ComicRequest {
-    @NotNull
+public class UpdateComicRequest {
     String comicName;
-
     String otherName;
 
+    @ValidStatus(
+            value = {StoryStatus.COMPLETED, StoryStatus.ON_GOING},
+            message = "STORY_STATUS_ERROR"
+    )
+    StoryStatus storyStatus;
     Gender gender;
-
-    @NotNull
-    @Future(message = "PUBLISH_TIMESTAMP_ERROR")
-    Instant publishAt;
-
-    @NotNull
     String description;
-
-    @NotNull
-    Set<Integer> genreCodes; // danh sách code để tìm genre
-
+    Set<Integer> genreCodes;
     MultipartFile coverImage;
 }

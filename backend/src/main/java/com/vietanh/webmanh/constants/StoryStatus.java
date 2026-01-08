@@ -1,7 +1,6 @@
 package com.vietanh.webmanh.constants;
 
 public enum StoryStatus {
-
     ON_GOING("Đang ra"),
     COMPLETED("Hoàn thành"),
     UPCOMING("Sắp phát hành");

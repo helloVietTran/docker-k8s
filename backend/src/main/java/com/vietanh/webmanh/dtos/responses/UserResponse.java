@@ -28,5 +28,4 @@ public class UserResponse {
     Gender gender;
 
     Set<RoleResponse> roles;
-    String frame;
 }

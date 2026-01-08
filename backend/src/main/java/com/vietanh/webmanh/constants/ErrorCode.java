@@ -12,12 +12,14 @@ public enum ErrorCode {
     PASSWORDS_DO_NOT_MATCH(41, "Password and confirmPassword not match", HttpStatus.BAD_REQUEST),
     SEND_WELCOME_MAIL_FAILED(81, "Send welcome mail failed", HttpStatus.BAD_REQUEST),
 
-    THIS_PROPERTY_IS_NOT_ALLOW_NULL(121, "This property is not allow null", HttpStatus.BAD_REQUEST),
     ERROR_REPORTER_NOT_EXISTED(42, "This property is not allow null", HttpStatus.BAD_REQUEST),
     ERROR_ALREADY_REPORTED(43, "Error already report", HttpStatus.BAD_REQUEST),
 
+    STORY_STATUS_ERROR(92, "Story status must different APPROVE_PENDING", HttpStatus.BAD_REQUEST),
+
     REQUIRED_IMAGE(51, "Image is required", HttpStatus.BAD_REQUEST),
     FILE_STORAGE_ERROR(55, "Storage file error", HttpStatus.INTERNAL_SERVER_ERROR),
+    PUBLISH_TIMESTAMP_ERROR(141, "Publish time must be after now", HttpStatus.BAD_REQUEST),
 
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
@@ -36,7 +38,7 @@ public enum ErrorCode {
     AVATAR_FRAME_NOT_EXISTED(1020, "Avatar frame not existed", HttpStatus.BAD_REQUEST),
     GENRE_NOT_EXISTED(1030, "Genre not existed", HttpStatus.NOT_FOUND),
     POINT_NOT_EXISTED(1040, "Point record not existed", HttpStatus.NOT_FOUND),
-    STORY_NOT_EXISTED(1050, "Story not existed", HttpStatus.NOT_FOUND),
+    COMIC_NOT_EXISTED(1050, "Story not existed", HttpStatus.NOT_FOUND),
     CHAPTER_NOT_EXISTED(1060, "Chapter not existed", HttpStatus.NOT_FOUND),
     LEVEL_NOT_EXISTED(1070, "Level record not existed", HttpStatus.NOT_FOUND),
     TOKEN_NOT_EXISTED(1080, "Token not existed", HttpStatus.BAD_REQUEST),

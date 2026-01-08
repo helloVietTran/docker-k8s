@@ -1,4 +1,4 @@
-package com.vietanh.webmanh.constrains;
+package com.vietanh.webmanh.constraints;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

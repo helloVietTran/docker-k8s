@@ -65,7 +65,9 @@ management:
 logging:
   level:
     org.apache.kafka: ERROR
-
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
 app:
   frontend:
     base-url: http://localhost:5173

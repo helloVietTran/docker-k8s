@@ -1,13 +1,11 @@
 package com.vietanh.webmanh.utils;
 
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.core.MatOfInt;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,18 +38,34 @@ public class ImageUtil {
         Imgcodecs.imwrite(path.toString(), image, params);
     }
 
-    /** Resize giữ tỷ lệ, width hoặc height sẽ bị giới hạn, chiều còn lại tính theo tỷ lệ */
-    public static Mat resizeKeepRatio(Mat src, int maxWidth, int maxHeight) {
+    /** Resize giữ tỷ lệ */
+    public static Mat downSizeKeepRatio(Mat src, int maxWidth, int maxHeight) {
         int originalWidth = src.cols();
         int originalHeight = src.rows();
 
-        double ratio = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+        double ratio = Math.min(
+                (double) maxWidth / originalWidth,
+                (double) maxHeight / originalHeight
+        );
 
         int newWidth = (int) (originalWidth * ratio);
         int newHeight = (int) (originalHeight * ratio);
 
-        Mat dst = new Mat();
-        Imgproc.resize(src, dst, new Size(newWidth, newHeight), 0, 0, Imgproc.INTER_LANCZOS4);
-        return dst;
+        // Resize
+        Mat resized = new Mat();
+        Imgproc.resize(src, resized, new Size(newWidth, newHeight), 0, 0, Imgproc.INTER_AREA);
+
+        // Sharpen : lấy lại biên sau khi downsize
+        Mat kernel = new Mat(3, 3, CvType.CV_32F);
+        kernel.put(0, 0,
+                0, -0.5f,  0,
+                -0.5f, 3f, -0.5f,
+                0, -0.5f,  0
+        );
+
+        Mat sharpened = new Mat();
+        Imgproc.filter2D(resized, sharpened, -1, kernel);
+
+        return sharpened;
     }
 }

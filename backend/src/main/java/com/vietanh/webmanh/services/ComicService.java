@@ -1,15 +1,33 @@
 package com.vietanh.webmanh.services;
 
+import com.vietanh.webmanh.constants.ComicSortType;
+import com.vietanh.webmanh.constants.Gender;
+import com.vietanh.webmanh.constants.StoryStatus;
 import com.vietanh.webmanh.dtos.requests.ComicRequest;
+import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
 import com.vietanh.webmanh.dtos.responses.PageResponse;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface ComicService {
     ComicResponse createComic(ComicRequest request);
 
-    ComicResponse updateComic(ComicRequest request);
+    ComicResponse updateComic(UpdateComicRequest request, Integer comicId);
 
-    void deleteComic(ComicRequest request);
+    ComicResponse getComicById(Integer comicId);
 
-    PageResponse<ComicResponse> getComics();
+    void deleteComic(Integer comicId);
+
+    PageResponse<ComicResponse> searchComics(
+            String keyword,
+            List<Integer> genreCodes,
+            List<Integer> notGenreCodes,
+            StoryStatus status,
+            Integer minChapter,
+            Gender gender,
+            ComicSortType sortOption,
+            Pageable pageable
+    );;
 }
