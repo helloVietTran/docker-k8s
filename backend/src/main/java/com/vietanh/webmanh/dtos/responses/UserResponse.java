@@ -1,6 +1,7 @@
 package com.vietanh.webmanh.dtos.responses;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -20,7 +21,9 @@ public class UserResponse {
     String id;
     String email;
     Boolean isVerified;
-    String imgSrc;
+    String avatar;
+
+    LocalDate dob;
 
     Instant createdAt;
     Instant updatedAt;

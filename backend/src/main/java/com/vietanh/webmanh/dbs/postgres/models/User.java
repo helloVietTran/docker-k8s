@@ -1,5 +1,8 @@
 package com.vietanh.webmanh.dbs.postgres.models;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.vietanh.webmanh.constants.Gender;
@@ -33,6 +36,8 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     String password;
 
+    LocalDate dob;
+
     String avatar;
 
     @Builder.Default
@@ -47,4 +52,7 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "author")
     Set<Comic> comics;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    Set<Comment> comments = new HashSet<>();
 }
