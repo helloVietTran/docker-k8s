@@ -9,7 +9,14 @@ import com.vietanh.webmanh.exception.AppException;
 import com.vietanh.webmanh.mappers.ComicMapper;
 import com.vietanh.webmanh.services.AdminService;
 import com.vietanh.webmanh.utils.PathUtil;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
 
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminServiceImpl implements AdminService {
     ComicRepository comicRepository;
 

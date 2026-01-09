@@ -170,7 +170,7 @@ public class ComicServiceImpl implements ComicService {
 
     @Override
     public ComicResponse getComicById(Integer comicId) {
-        Comic comic = comicRepository.findByIdAndAdminDecisionIn(
+        Comic comic = comicRepository.findByComicIdAndAdminDecisionIn(
                         comicId,
                         List.of(AdminDecision.APPROVED))
                 .orElseThrow(() -> new AppException(ErrorCode.COMIC_NOT_EXISTED));

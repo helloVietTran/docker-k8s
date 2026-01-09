@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface ComicRepository extends JpaRepository<Comic, Integer>,
         JpaSpecificationExecutor<Comic> {
 
-    Optional<Comic> findByIdAndAdminDecisionIn(
+    Optional<Comic> findByComicIdAndAdminDecisionIn(
             Integer id,
             Collection<AdminDecision> decisions
     );
