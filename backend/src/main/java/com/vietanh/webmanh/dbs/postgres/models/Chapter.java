@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.List;
 
 @Getter
@@ -14,29 +15,35 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "chapter")
-public class Chapter {
+public class Chapter extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer chapterId;
 
     @Column(nullable = false)
-    String chapterNumber;
+    String chapterNo;
 
     String chapterName;
 
     @Builder.Default
     int viewCount = 0;
 
+    @Column(nullable = false)
     String slug;
 
     @ManyToOne
     Comic comic;
 
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    List<ChapterImage> images;
+    @OneToMany(
+            mappedBy = "chapter",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    List<ChapterImage> chapterImages;
 
-    @PrePersist
-    public void onCreate() {
-        slug = "chap-" + this.chapterNumber;
+    public void generateSelfSlug() {
+        this.slug = "chap-" + this.chapterNo;
     }
+
 }

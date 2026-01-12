@@ -36,7 +36,8 @@ public class SecurityConfig {
 
     private final String[] GET_METHOD_PUBLIC_ENDPOINTS = {
             "/", "/actuator/**", "/error-report", "/comics/search", "/comics/{comicId}",
-            "/genres"
+            "/genres",
+            "/comics/chapters/{chapterId}"
     };
     private final String[] POST_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/register", "/auth/login", "/auth/refresh", "/auth/introspect",
@@ -47,9 +48,6 @@ public class SecurityConfig {
     private final String[] PUT_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/change-password", "/auth/change-password/reset-token",
             "/auth/verify-account"
-    };
-    private final String[] PATCH_METHOD_PUBLIC_ENDPOINTS = {
-
     };
 
     @Autowired
@@ -66,8 +64,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, POST_METHOD_PUBLIC_ENDPOINTS)
                         .permitAll()
                         .requestMatchers(HttpMethod.PUT, PUT_METHOD_PUBLIC_ENDPOINTS)
-                        .permitAll()
-                        .requestMatchers(HttpMethod.PATCH, PATCH_METHOD_PUBLIC_ENDPOINTS)
                         .permitAll()
                         .anyRequest()
                         .authenticated())

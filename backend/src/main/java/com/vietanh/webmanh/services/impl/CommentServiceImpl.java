@@ -3,6 +3,7 @@ package com.vietanh.webmanh.services.impl;
 import com.vietanh.webmanh.constants.ErrorCode;
 import com.vietanh.webmanh.dbs.postgres.models.Comment;
 import com.vietanh.webmanh.dbs.postgres.models.User;
+import com.vietanh.webmanh.dbs.postgres.repositories.ChapterRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.CommentRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.UserRepository;
 import com.vietanh.webmanh.dtos.requests.CreateCommentRequest;
@@ -28,6 +29,8 @@ public class CommentServiceImpl implements CommentService {
 
     CommentRepository commentRepository;
     UserRepository userRepository;
+    ChapterRepository chapterRepository;
+
     CommentMapper commentMapper;
 
     /**
@@ -41,13 +44,16 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Comment newComment = commentMapper.toComment(request);
-        // kiểm tra chapter có tồn tại không
+
+        if(!chapterRepository.existsById(request.getChapterId())){
+           throw new AppException(ErrorCode.CHAPTER_NOT_EXISTED);
+        }
 
         newComment.setUser(user);
 
         if (request.getParentCommentId() == null) {
 
-            Integer maxRight = commentRepository
+            int maxRight = commentRepository
                     .findMaxRightByChapterId(request.getChapterId())
                     .orElse(0);
 
@@ -132,8 +138,9 @@ public class CommentServiceImpl implements CommentService {
 
         Integer userId = AuthUtil.getCurrentUserId();
 
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
+        if(!commentRepository.existsById(commentId)){
+            throw new AppException(ErrorCode.COMMENT_NOT_EXISTED);
+        }
 
         Object[] status = commentRepository.getReactStatus(commentId, userId);
         boolean liked = status != null && Boolean.TRUE.equals(status[0]);
@@ -151,8 +158,9 @@ public class CommentServiceImpl implements CommentService {
 
         Integer userId = AuthUtil.getCurrentUserId();
 
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
+        if(!commentRepository.existsById(commentId)){
+            throw new AppException(ErrorCode.COMMENT_NOT_EXISTED);
+        }
 
         Object[] status = commentRepository.getReactStatus(commentId, userId);
         boolean disliked = status != null && Boolean.TRUE.equals(status[1]);

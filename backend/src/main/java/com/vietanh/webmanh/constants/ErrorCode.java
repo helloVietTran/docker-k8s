@@ -18,8 +18,9 @@ public enum ErrorCode {
     STORY_STATUS_ERROR(92, "Story status must different APPROVE_PENDING", HttpStatus.BAD_REQUEST),
 
     REQUIRED_IMAGE(51, "Image is required", HttpStatus.BAD_REQUEST),
+
     FILE_STORAGE_ERROR(55, "Storage file error", HttpStatus.INTERNAL_SERVER_ERROR),
-    PUBLISH_TIMESTAMP_ERROR(141, "Publish time must be after now", HttpStatus.BAD_REQUEST),
+    DELETED_FILE_ERROR(161, "Delete file on disk failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
@@ -57,8 +58,6 @@ public enum ErrorCode {
     NOT_ENOUGH_POINT(1042, "You don't have enough point to buy it", HttpStatus.BAD_REQUEST),
 
     CANNOT_SEND_EMAIL(1990, "Can't not send email", HttpStatus.INTERNAL_SERVER_ERROR),
-
-    NUMBER_FORMAT_EXCEPTION(1910, "Number format exception", HttpStatus.INTERNAL_SERVER_ERROR),
 
     UNAUTHENTICATED(1900, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1901, "You do not have permission", HttpStatus.FORBIDDEN),

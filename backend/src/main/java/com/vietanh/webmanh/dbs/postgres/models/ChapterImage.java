@@ -1,11 +1,8 @@
 package com.vietanh.webmanh.dbs.postgres.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.Instant;
 
 @Getter
 @Setter
@@ -17,12 +14,15 @@ import java.time.Instant;
 @Table(name = "chapter_image")
 public class ChapterImage extends BaseEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String chapterImageId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Integer chapterImageId;
 
-    // convention : <slug_comic> + <slug_chapter> + id
+    // convention : <slug_comic> + <slug_chapter> + slug_image
     @Column(nullable = false)
-    String imageSrc;
+    String chapterImageSrc;
+
+    @Column(nullable = false)
+    String chapterImageName;
 
     @ManyToOne
     Chapter chapter;

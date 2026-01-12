@@ -64,7 +64,7 @@ public class Comic extends BaseEntity{
     @Builder.Default
     int likeCount = 0;
 
-    int newestChapter;
+    String newestChapter; // denormalization
 
     @Enumerated(EnumType.STRING)
     Gender gender; // null là cả 2

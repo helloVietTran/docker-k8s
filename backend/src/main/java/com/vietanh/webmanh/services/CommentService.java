@@ -2,7 +2,6 @@ package com.vietanh.webmanh.services;
 
 import com.vietanh.webmanh.dtos.requests.CreateCommentRequest;
 import com.vietanh.webmanh.dtos.responses.CommentResponse;
-import com.vietanh.webmanh.dtos.responses.ReactResponse;
 
 import java.util.List;
 
