@@ -31,6 +31,9 @@ public class Chapter extends BaseEntity {
     @Column(nullable = false)
     String slug;
 
+    @Column(nullable = false)
+    Integer chapterIndex;
+
     @ManyToOne
     Comic comic;
 
@@ -45,5 +48,4 @@ public class Chapter extends BaseEntity {
     public void generateSelfSlug() {
         this.slug = "chap-" + this.chapterNo;
     }
-
 }

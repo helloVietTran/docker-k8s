@@ -61,6 +61,11 @@ public class ChapterServiceImpl implements ChapterService {
         chapter.generateSelfSlug();
         chapter.setComic(comic);
 
+        Integer nextIndex = chapterRepository
+                .findMaxIndexByComicId(comicId)
+                .orElse(0) + 1;
+        chapter.setChapterIndex(nextIndex);
+
         try {
             List<ChapterImage> images =
                     saveChapterImages(chapter, comic, request.getImageFiles());
@@ -75,7 +80,6 @@ public class ChapterServiceImpl implements ChapterService {
             throw new AppException(ErrorCode.FILE_STORAGE_ERROR);
         }
     }
-
 
     @Override
     @Transactional
@@ -130,7 +134,6 @@ public class ChapterServiceImpl implements ChapterService {
         // 2. delete chapter
         chapterRepository.delete(chapter);
     }
-
 
     @Override
     public ChapterResponse getChapterById(Integer chapterId) {
@@ -270,5 +273,4 @@ public class ChapterServiceImpl implements ChapterService {
 
         return res;
     }
-
 }

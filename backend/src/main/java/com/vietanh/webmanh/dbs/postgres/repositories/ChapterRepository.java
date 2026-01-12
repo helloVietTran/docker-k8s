@@ -18,4 +18,39 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
         where c.chapterId = :chapterId
     """)
     Optional<Chapter> findByIdWithImages(@Param("chapterId") Integer chapterId);
+
+
+
+    @Query("""
+        select c
+        from Chapter c
+        where c.comic.id = :comicId
+          and c.chapterIndex > :currentIndex
+        order by c.chapterIndex asc
+        limit 1
+    """)
+    Optional<Chapter> findNextChapter(
+            Integer comicId,
+            Integer currentIndex
+    );
+
+    @Query("""
+        select c
+        from Chapter c
+        where c.comic.id = :comicId
+          and c.chapterIndex < :currentIndex
+        order by c.chapterIndex desc
+        limit 1
+    """)
+    Optional<Chapter> findPreviousChapter(
+            Integer comicId,
+            Integer currentIndex
+    );
+
+    @Query("""
+        select max(c.chapterIndex)
+        from Chapter c
+        where c.comic.id = :comicId
+    """)
+    Optional<Integer> findMaxIndexByComicId(@Param("comicId") Integer comicId);
 }

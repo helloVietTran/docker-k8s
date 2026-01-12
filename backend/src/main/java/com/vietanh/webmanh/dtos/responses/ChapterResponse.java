@@ -22,5 +22,7 @@ public class ChapterResponse {
     String createdAt;
     String updatedAt;
 
+
+
     List<ChapterImageDTO> chapterImages;
 }
