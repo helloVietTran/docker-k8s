@@ -30,7 +30,6 @@ public class Chapter extends BaseEntity {
     @Column(nullable = false)
     String slug;
 
-    @Column(nullable = false)
     Integer chapterIndex;
 
     @ManyToOne

@@ -68,6 +68,19 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<!--Open CV-->
+		<dependency>
+			<groupId>org.openpnp</groupId>
+			<artifactId>opencv</artifactId>
+			<version>4.6.0-0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.16.0</version>
+		</dependency>
+
 		<!--DB-->
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -75,11 +88,14 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!--Open CV-->
 		<dependency>
-			<groupId>org.openpnp</groupId>
-			<artifactId>opencv</artifactId>
-			<version>4.6.0-0</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
 		</dependency>
 
 		<dependency>

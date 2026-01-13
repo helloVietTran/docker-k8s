@@ -47,7 +47,8 @@ public class SecurityConfig {
     };
     private final String[] PUT_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/change-password", "/auth/change-password/reset-token",
-            "/auth/verify-account"
+            "/auth/verify-account",
+            "/views/chapters/{chapterId}"
     };
 
     @Autowired

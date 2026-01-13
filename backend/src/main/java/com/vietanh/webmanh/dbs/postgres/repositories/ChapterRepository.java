@@ -2,9 +2,11 @@ package com.vietanh.webmanh.dbs.postgres.repositories;
 
 import com.vietanh.webmanh.dbs.postgres.models.Chapter;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -18,8 +20,6 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
         where c.chapterId = :chapterId
     """)
     Optional<Chapter> findByIdWithImages(@Param("chapterId") Integer chapterId);
-
-
 
     @Query("""
         select c
@@ -53,4 +53,9 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
         where c.comic.id = :comicId
     """)
     Optional<Integer> findMaxIndexByComicId(@Param("comicId") Integer comicId);
+
+    @Query(value = "UPDATE chapter SET view_count = view_count + 1 " +
+            "WHERE chapter_id = :chapterId " +
+            "RETURNING *", nativeQuery = true)
+    Optional<Chapter> findByIdAndIncrementView(@Param("chapterId") Integer chapterId);
 }

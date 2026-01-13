@@ -57,6 +57,8 @@ logging:
   level:
     org.apache.kafka: ERROR
     org.hibernate.SQL: DEBUG
+    io.lettuce.core: DEBUG
+    org.springframework.data.redis: DEBUG
 
 # app config
 app:
