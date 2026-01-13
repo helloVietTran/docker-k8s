@@ -4,10 +4,11 @@ import com.vietanh.webmanh.constants.ErrorCode;
 import com.vietanh.webmanh.dbs.postgres.models.ReadingHistory;
 import com.vietanh.webmanh.dbs.postgres.repositories.ChapterRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.ComicRepository;
+import com.vietanh.webmanh.dbs.postgres.repositories.FollowComicRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.ReadingHistoryRepository;
 import com.vietanh.webmanh.dtos.responses.ReadingHistoryResponse;
 import com.vietanh.webmanh.exception.AppException;
-import com.vietanh.webmanh.services.ReadingService;
+import com.vietanh.webmanh.services.ReadingHistoryService;
 import com.vietanh.webmanh.utils.AuthUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +24,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ReadingServiceImpl implements ReadingService {
+public class ReadingHistoryServiceImpl implements ReadingHistoryService {
 
     ReadingHistoryRepository readingHistoryRepository;
     ComicRepository comicRepository;
     ChapterRepository chapterRepository;
+    FollowComicRepository followComicRepository;
 
     @Override
     @Transactional

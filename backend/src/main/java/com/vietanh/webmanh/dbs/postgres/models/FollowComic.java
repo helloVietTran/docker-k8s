@@ -13,10 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(
-        name = "follow_comic",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "comic_id"})
-)
+@Table(name = "follow_comic")
 public class FollowComic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +27,9 @@ public class FollowComic {
 
     Instant followedAt;
 
-    Integer lastReadChapterId;
+    @Builder.Default
+    Boolean priority = false; // pin lên đầu danh sách
 
-    Boolean notifyEnabled;
+    @Builder.Default
+    Boolean notifyEnabled = false;
 }

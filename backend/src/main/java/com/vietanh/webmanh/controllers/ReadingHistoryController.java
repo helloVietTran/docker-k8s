@@ -2,7 +2,7 @@ package com.vietanh.webmanh.controllers;
 
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
 import com.vietanh.webmanh.dtos.responses.ReadingHistoryResponse;
-import com.vietanh.webmanh.services.ReadingService;
+import com.vietanh.webmanh.services.ReadingHistoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,36 +12,36 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reading")
+@RequestMapping("/reading-history")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ReadingController {
-    ReadingService readingService;
+public class ReadingHistoryController {
+    ReadingHistoryService readingHistoryService;
 
-    @PutMapping("/history/comics/{comicId}/chapters/{chapterId}")
+    @PutMapping("/comics/{comicId}/chapters/{chapterId}")
     public ApiResponse<ReadingHistoryResponse> saveReadingHistory(
             @PathVariable Integer comicId,
             @PathVariable Integer chapterId
     ) {
 
         return ApiResponse.<ReadingHistoryResponse>builder()
-                .result(readingService.saveReadingHistory(comicId, chapterId))
+                .result(readingHistoryService.saveReadingHistory(comicId, chapterId))
                 .build();
     }
 
-    @GetMapping("/history/my")
+    @GetMapping("/my")
     public ApiResponse<List<ReadingHistoryResponse>> getReadingHistory() {
 
         return ApiResponse.<List<ReadingHistoryResponse>>builder()
-                .result(readingService.getAllByUserId())
+                .result(readingHistoryService.getAllByUserId())
                 .build();
     }
 
-    @DeleteMapping("/history/comics/{comicId}")
+    @DeleteMapping("/comics/{comicId}")
     public ApiResponse<Void> deleteReadingHistory(
             @PathVariable Integer comicId
     ) {
-        readingService.deleteHistoryByComicId(comicId);
+        readingHistoryService.deleteHistoryByComicId(comicId);
 
         return ApiResponse.<Void>builder().build();
     }

@@ -22,6 +22,8 @@ public enum ErrorCode {
     FILE_STORAGE_ERROR(55, "Storage file error", HttpStatus.INTERNAL_SERVER_ERROR),
     DELETED_FILE_ERROR(161, "Delete file on disk failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    FOLLOW_NOT_FOUND(181, "Follow comic record not found", HttpStatus.NOT_FOUND),
+
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1003, "Length of password must be between 6 and 20 characters", HttpStatus.BAD_REQUEST),

@@ -3,8 +3,6 @@ package com.vietanh.webmanh.dbs.postgres.models;
 import com.vietanh.webmanh.constants.UserRank;
 import jakarta.persistence.*;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
