@@ -1,10 +1,7 @@
 package com.vietanh.webmanh.dtos.responses;
 
-import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor

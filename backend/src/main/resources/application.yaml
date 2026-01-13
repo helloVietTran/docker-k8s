@@ -29,15 +29,6 @@ spring:
       ddl-auto: update # dev only
     show-sql: true
 
-  data:
-    mongodb:
-      uri: mongodb://app_user:app_password@localhost:27017/app_db?authSource=app_user # root user luôn ở admin
-
-  mongodb:
-    connection-pool:
-      max-size: 50
-      min-size: 5
-
   kafka:
     bootstrap-servers: localhost:9092
 
@@ -66,8 +57,8 @@ logging:
   level:
     org.apache.kafka: ERROR
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.hibernate.orm.jdbc.bind: TRACE
+
+# app config
 app:
   frontend:
     base-url: http://localhost:5173

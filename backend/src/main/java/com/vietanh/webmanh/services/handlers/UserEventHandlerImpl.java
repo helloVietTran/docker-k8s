@@ -24,7 +24,6 @@ public class UserEventHandlerImpl implements UserEventHandler {
     JavaMailSender mailSender;
     SpringTemplateEngine templateEngine;
 
-
     @Override
     public void handleUserCreatedEvent(UserCreatedEvent event) {
         sendWelcomeEmail(event);
@@ -84,5 +83,4 @@ public class UserEventHandlerImpl implements UserEventHandler {
             throw new AppException(ErrorCode.CANNOT_SEND_EMAIL);
         }
     }
-
 }
