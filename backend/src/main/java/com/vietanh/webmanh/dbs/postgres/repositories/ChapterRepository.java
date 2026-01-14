@@ -63,4 +63,12 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
     """)
     void increaseViewCount(@Param("chapterId") Integer chapterId,
                            @Param("delta") Integer delta);
+
+    @Query("""
+        SELECT c
+        FROM Chapter c
+        JOIN FETCH c.comic
+        WHERE c.chapterId = :chapterId
+    """)
+    Optional<Chapter> findChapterWithComic(@Param("chapterId") Integer chapterId);
 }

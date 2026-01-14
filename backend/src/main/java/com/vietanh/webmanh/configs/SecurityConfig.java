@@ -37,7 +37,8 @@ public class SecurityConfig {
     private final String[] GET_METHOD_PUBLIC_ENDPOINTS = {
             "/", "/actuator/**", "/error-report", "/comics/search", "/comics/{comicId}",
             "/genres",
-            "/comics/chapters/{chapterId}"
+            "/comics/chapters/{chapterId}",
+            "/statistic/top-comics/day", "/statistic/top-comics/week", "/statistic/top-comics/month"
     };
     private final String[] POST_METHOD_PUBLIC_ENDPOINTS = {
             "/auth/register", "/auth/login", "/auth/refresh", "/auth/introspect",
