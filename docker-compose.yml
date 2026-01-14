@@ -8,20 +8,20 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
   
-  mongodb:
-    image: mongo:latest
-    container_name: mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root_password
-    volumes:
-      - mongo_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # cấp quyền user app_user
-    networks:
-      - mongonet
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongo
+  #   restart: unless-stopped
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: root_password
+  #   volumes:
+  #     - mongo_data:/data/db
+  #     - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # cấp quyền user app_user
+  #   networks:
+  #     - mongonet
   kafka:
     image: apache/kafka:4.1.0
     container_name: kafka
@@ -48,6 +48,18 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
       - kafka_data:/var/lib/kafka/data
+  
+  redis:
+    image: redis:8.4.0
+    container_name: redis
+    volumes:
+      - ./users.acl:/etc/redis/users.acl
+      - redis_data:/data
+    command: >
+      redis-server 
+      --aclfile /etc/redis/users.acl
+    ports:
+      - "6379:6379"
 
   # PostgreSQL Master-Slave Replication with Pgpool-II Load Balancing
   postgresql-master:
@@ -133,11 +145,12 @@ volumes:
   pg_slave1_data:
   pg_slave2_data:
   mongo_data:
+  redis_data:
   kafka_data:
     driver: local
 
 networks:
   pgnet:
     driver: bridge
-  mongonet:
-    driver: bridge
+  # mongonet:
+  #   driver: bridge

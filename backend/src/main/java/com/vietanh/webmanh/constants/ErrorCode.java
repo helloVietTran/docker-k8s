@@ -24,6 +24,8 @@ public enum ErrorCode {
 
     FOLLOW_NOT_FOUND(181, "Follow comic record not found", HttpStatus.NOT_FOUND),
 
+    ALREADY_READING_BOOK(305, "You already read this chapter", HttpStatus.BAD_REQUEST),
+
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1003, "Length of password must be between 6 and 20 characters", HttpStatus.BAD_REQUEST),

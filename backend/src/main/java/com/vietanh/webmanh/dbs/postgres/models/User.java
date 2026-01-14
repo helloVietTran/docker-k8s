@@ -55,8 +55,4 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     Set<Comment> comments = new HashSet<>();
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "level_id")
-    Level level;
 }

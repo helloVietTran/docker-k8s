@@ -2,6 +2,7 @@ package com.vietanh.webmanh.services;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-public interface ViewService {
+public interface ReadingService{
+    void increaseExp(Integer chapterId);
     void increaseView(Integer chapterId, HttpServletRequest request);
 }

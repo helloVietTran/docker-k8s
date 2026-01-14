@@ -34,8 +34,8 @@ public class Level {
     @Builder.Default
     int nextLevelChaptersRequired = UserRank.RANK_2.getReadChaptersRequired();
 
-    @OneToOne(mappedBy = "level")
-    User user;
+    @Column(nullable = false)
+    Integer userId;
 
     public void increaseChaptersRead(int quantity) {
         this.chaptersRead += quantity;

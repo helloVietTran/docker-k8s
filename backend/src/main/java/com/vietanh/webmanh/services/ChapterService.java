@@ -13,4 +13,18 @@ public interface ChapterService {
     void deleteChapter(Integer comicId, Integer chapterId);
 
     ChapterResponse getChapterById(Integer chapterId);
+
+    /**
+     * Validates that a chapter exists.
+     *
+     * <p>Flow:
+     * <ul>
+     *   <li>Check chapterId in Redis SET cache</li>
+     *   <li>If cache miss, fallback to database</li>
+     *   <li>If exists in DB, update Redis SET</li>
+     * </ul>
+     *
+     * @param chapterId id of the chapter to validate
+     */
+    void validateReadable(Integer chapterId);
 }

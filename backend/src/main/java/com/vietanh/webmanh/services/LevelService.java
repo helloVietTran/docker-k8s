@@ -1,6 +1,7 @@
 package com.vietanh.webmanh.services;
 
-public interface LevelService {
+import com.vietanh.webmanh.dbs.postgres.models.Level;
 
-    void increaseExp(Integer chapterId);
+public interface LevelService {
+    Level getOrCreateLevel(Integer userId);
 }

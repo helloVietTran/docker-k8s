@@ -54,8 +54,13 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
     """)
     Optional<Integer> findMaxIndexByComicId(@Param("comicId") Integer comicId);
 
-    @Query(value = "UPDATE chapter SET view_count = view_count + 1 " +
-            "WHERE chapter_id = :chapterId " +
-            "RETURNING *", nativeQuery = true)
-    Optional<Chapter> findByIdAndIncrementView(@Param("chapterId") Integer chapterId);
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE Chapter c
+        SET c.viewCount = c.viewCount + :delta
+        WHERE c.id = :chapterId
+    """)
+    void increaseViewCount(@Param("chapterId") Integer chapterId,
+                           @Param("delta") Integer delta);
 }

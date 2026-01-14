@@ -1,0 +1,3 @@
+user default off
+user admin on >AdminPassword ~* +@all
+user app_user on >AppPassword123 ~cache:* +get +set +del +incr +exists +expire +@connection

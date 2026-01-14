@@ -24,6 +24,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -42,9 +45,11 @@ import java.util.List;
 public class ChapterServiceImpl implements ChapterService {
     ComicRepository comicRepository;
     ChapterRepository chapterRepository;
-    ChapterImageRepository chapterImageRepository;
 
+    StringRedisTemplate stringRedisTemplate;
     ChapterMapper chapterMapper;
+
+    static final String CHAPTER_ID_SET = "chapter:ids";
 
     @NonFinal
     @Value("${app.image-root}")
@@ -238,6 +243,38 @@ public class ChapterServiceImpl implements ChapterService {
                 }
             }
             throw e;
+        }
+    }
+
+    @Override
+    public void validateReadable(Integer chapterId) {
+        Boolean existsInRedis = stringRedisTemplate.opsForSet()
+                .isMember(CHAPTER_ID_SET, chapterId.toString());
+
+        if (Boolean.TRUE.equals(existsInRedis)) {
+            return;
+        }
+
+        // cache miss
+        // TODO: chapter đã public hay chưa, đã bị xóa chưa ??
+        boolean existsInDb = chapterRepository.existsById(chapterId);
+        if (!existsInDb) {
+            throw new AppException(ErrorCode.CHAPTER_NOT_EXISTED);
+        }
+
+        stringRedisTemplate.opsForSet()
+                .add(CHAPTER_ID_SET, chapterId.toString());
+
+        Long ttl = stringRedisTemplate.getExpire(CHAPTER_ID_SET);
+        if (ttl == null || ttl == -1) {
+            int randomMinutes = ThreadLocalRandom.current().nextInt(60);
+            long ttlMinutes = 60 + randomMinutes;
+
+            stringRedisTemplate.expire(
+                    CHAPTER_ID_SET,
+                    ttlMinutes,
+                    TimeUnit.MINUTES
+            );
         }
     }
 
