@@ -47,5 +47,4 @@ public class ReadingController {
                 .message("View processed")
                 .build();
     }
-
 }

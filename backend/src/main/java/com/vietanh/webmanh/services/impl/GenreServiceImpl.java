@@ -10,7 +10,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +31,6 @@ public class GenreServiceImpl implements GenreService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
     public GenreResponse updateGenre(Integer genreId, UpdateGenreRequest request) {
         Genre genre = genreRepository.findById(genreId)
                 .orElseThrow(() ->

@@ -1,4 +1,4 @@
-package com.vietanh.webmanh.controllers;
+package com.vietanh.webmanh.controllers.management;
 
 import com.vietanh.webmanh.dtos.requests.UpdatePublishCalendarRequest;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
@@ -12,11 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/manage/publish-calendar")
+@RequestMapping("/management/publish-calendar")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PublishCalendarController {
-
     PublishCalendarService publishCalendarService;
 
     @PostMapping("/comic/{comicId}")

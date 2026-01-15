@@ -8,20 +8,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
   
-  # mongodb:
-  #   image: mongo:latest
-  #   container_name: mongo
-  #   restart: unless-stopped
-  #   ports:
-  #     - "27017:27017"
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: root_password
-  #   volumes:
-  #     - mongo_data:/data/db
-  #     - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # cấp quyền user app_user
-  #   networks:
-  #     - mongonet
   kafka:
     image: apache/kafka:4.1.0
     container_name: kafka
@@ -53,7 +39,7 @@ services:
     image: redis:8.4.0
     container_name: redis
     volumes:
-      - ./users.acl:/etc/redis/users.acl
+      - ./redis-users.acl:/etc/redis/users.acl
       - redis_data:/data
     command: >
       redis-server 
@@ -139,7 +125,21 @@ services:
 
     networks:
       - pgnet
-
+      
+  # mongodb:
+#   image: mongo:latest
+#   container_name: mongo
+#   restart: unless-stopped
+#   ports:
+#     - "27017:27017"
+#   environment:
+#     MONGO_INITDB_ROOT_USERNAME: root
+#     MONGO_INITDB_ROOT_PASSWORD: root_password
+#   volumes:
+#     - mongo_data:/data/db
+#     - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # cấp quyền user app_user
+#   networks:
+#     - mongonet
 volumes:
   pg_master_data:
   pg_slave1_data:

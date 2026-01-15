@@ -5,7 +5,6 @@ import com.vietanh.webmanh.dbs.postgres.models.Chapter;
 import com.vietanh.webmanh.dbs.postgres.models.ChapterImage;
 import com.vietanh.webmanh.dbs.postgres.models.Comic;
 import com.vietanh.webmanh.dbs.postgres.models.User;
-import com.vietanh.webmanh.dbs.postgres.repositories.ChapterImageRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.ChapterRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.ComicRepository;
 import com.vietanh.webmanh.dtos.requests.ChapterRequest;
@@ -59,12 +58,16 @@ public class ChapterServiceImpl implements ChapterService {
     @Transactional
     public ChapterResponse createChapter(Integer comicId, ChapterRequest request) {
 
-        Comic comic = findComicAndValidateAuthor(comicId);
-        validateImages(request.getImageFiles());
+        Comic comic = this.findComicAndValidateAuthor(comicId);
+        this.validateImages(request.getImageFiles());
 
         Chapter chapter = chapterMapper.toChapter(request);
         chapter.generateSelfSlug();
         chapter.setComic(comic);
+
+//        if(!request.getIsFree()){
+//            chapter.setUnLockAt();
+//        }
 
         Integer nextIndex = chapterRepository
                 .findMaxIndexByComicId(comicId)
@@ -80,6 +83,7 @@ public class ChapterServiceImpl implements ChapterService {
             comicRepository.save(comic);
 
             Chapter saved = chapterRepository.save(chapter);
+
             return this.mapToChapterResponse(saved);
         } catch (IOException e) {
             throw new AppException(ErrorCode.FILE_STORAGE_ERROR);

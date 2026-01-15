@@ -1,9 +1,11 @@
 package com.vietanh.webmanh.dbs.postgres.models;
 
+import com.vietanh.webmanh.constants.AdminDecision;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -36,9 +38,12 @@ public class Chapter extends BaseEntity {
     @ManyToOne
     Comic comic;
 
-    int price;
+    @Builder.Default
+    AdminDecision adminDecision =  AdminDecision.APPROVE_PENDING;
 
-    Instant isFreeAfter; // chapter sẽ được miễn phí sau xx ngày
+    Integer price;
+
+    Instant unLockAt; // chapter sẽ mở khóa sau xx ngày publish
 
     @OneToMany(
             mappedBy = "chapter",

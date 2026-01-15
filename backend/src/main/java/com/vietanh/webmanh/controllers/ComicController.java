@@ -3,17 +3,15 @@ package com.vietanh.webmanh.controllers;
 import com.vietanh.webmanh.constants.ComicSortType;
 import com.vietanh.webmanh.constants.Gender;
 import com.vietanh.webmanh.constants.ComicStatus;
-import com.vietanh.webmanh.dtos.requests.ComicRequest;
-import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
 import com.vietanh.webmanh.dtos.responses.PageResponse;
 import com.vietanh.webmanh.services.ComicService;
+import com.vietanh.webmanh.services.StatisticService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,24 +22,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ComicController {
     ComicService comicService;
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<ComicResponse> createComic(@ModelAttribute ComicRequest request) {
-
-        return ApiResponse.<ComicResponse>builder()
-                .result(comicService.createComic(request))
-                .build();
-    }
-
-    @PutMapping(value = "/{comicId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<ComicResponse> updateComic(
-            @PathVariable Integer comicId,
-            @ModelAttribute UpdateComicRequest request) {
-
-        return ApiResponse.<ComicResponse>builder()
-                .result(comicService.updateComic(request, comicId))
-                .build();
-    }
+    StatisticService statisticService;
 
     @GetMapping("/{comicId}")
     public ApiResponse<ComicResponse> getComicById(@PathVariable Integer comicId) {
@@ -49,12 +30,6 @@ public class ComicController {
         return ApiResponse.<ComicResponse>builder()
                 .result(comicService.getComicById(comicId))
                 .build();
-    }
-
-    @DeleteMapping("/{comicId}")
-    public ApiResponse<Void> deleteComic(@PathVariable Integer comicId) {
-        comicService.deleteComic(comicId);
-        return ApiResponse.<Void>builder().build();
     }
 
     @GetMapping("/search")
@@ -84,4 +59,30 @@ public class ComicController {
                 .build();
     }
 
+    @GetMapping("/top-comics/day")
+    ApiResponse<?> topComicByDay(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.builder()
+                .result(statisticService.topComicByDay(limit))
+                .build();
+    }
+
+    @GetMapping("/top-comics/week")
+    ApiResponse<?> topComicByWeek(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.builder()
+                .result(statisticService.topComicByWeek(limit))
+                .build();
+    }
+
+    @GetMapping("/top-comics/month")
+    ApiResponse<?> topComicByMonth(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.builder()
+                .result(statisticService.topComicByMonth(limit))
+                .build();
+    }
 }

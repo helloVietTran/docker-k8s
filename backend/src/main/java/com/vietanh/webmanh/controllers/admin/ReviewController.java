@@ -1,4 +1,4 @@
-package com.vietanh.webmanh.controllers;
+package com.vietanh.webmanh.controllers.admin;
 
 import com.vietanh.webmanh.constants.AdminDecision;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
@@ -7,15 +7,13 @@ import com.vietanh.webmanh.services.AdminService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/review")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@PreAuthorize("hasRole('ADMIN')")
-public class AdminController {
+public class ReviewController {
     AdminService adminService;
 
     @PatchMapping("/comics/{comicId}")

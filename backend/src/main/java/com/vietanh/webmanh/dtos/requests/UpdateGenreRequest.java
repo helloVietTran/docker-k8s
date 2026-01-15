@@ -11,8 +11,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateGenreRequest {
     String name;
-
     String description;
-
     Integer code;
 }

@@ -1,7 +1,9 @@
 package com.vietanh.webmanh.dtos.requests;
 
+import java.time.Instant;
 import java.util.List;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,4 +22,14 @@ public class ChapterRequest {
     String chapterName;
 
     List<MultipartFile> imageFiles;
+
+    @NotNull
+    @Future(message = "PUBLISH_TIMESTAMP_ERROR")
+    Instant publishAt;
+
+    @NotNull
+    Boolean isFree;
+
+    Integer price;
+    Long unlockChapterAfterSeconds; // seconds
 }
