@@ -2,7 +2,7 @@ package com.vietanh.webmanh.dbs.postgres.specs;
 
 import com.vietanh.webmanh.constants.AdminDecision;
 import com.vietanh.webmanh.constants.Gender;
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.dbs.postgres.models.Comic;
 import com.vietanh.webmanh.dbs.postgres.models.Genre;
 import jakarta.persistence.criteria.*;
@@ -58,7 +58,7 @@ public class ComicSearchSpec {
         return this;
     }
 
-    public ComicSearchSpec filterByStatus(StoryStatus status) {
+    public ComicSearchSpec filterByStatus(ComicStatus status) {
         if (status == null) return this;
 
         specs.add((root, query, cb) ->

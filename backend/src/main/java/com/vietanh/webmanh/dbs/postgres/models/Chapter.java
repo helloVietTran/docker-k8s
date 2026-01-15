@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.List;
 
 @Getter
@@ -34,6 +35,10 @@ public class Chapter extends BaseEntity {
 
     @ManyToOne
     Comic comic;
+
+    int price;
+
+    Instant isFreeAfter; // chapter sẽ được miễn phí sau xx ngày
 
     @OneToMany(
             mappedBy = "chapter",

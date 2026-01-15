@@ -1,7 +1,7 @@
 package com.vietanh.webmanh.dtos.requests;
 
 import com.vietanh.webmanh.constants.Gender;
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.constraints.ValidStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,10 +19,10 @@ public class UpdateComicRequest {
     String otherName;
 
     @ValidStatus(
-            value = {StoryStatus.COMPLETED, StoryStatus.ON_GOING},
+            value = {ComicStatus.COMPLETED, ComicStatus.ON_GOING},
             message = "STORY_STATUS_ERROR"
     )
-    StoryStatus storyStatus;
+    ComicStatus comicStatus;
     Gender gender;
     String description;
     Set<Integer> genreCodes;

@@ -2,7 +2,7 @@ package com.vietanh.webmanh.dbs.postgres.models;
 
 import com.vietanh.webmanh.constants.AdminDecision;
 import com.vietanh.webmanh.constants.Gender;
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,7 +10,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.text.Normalizer;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +33,7 @@ public class Comic extends BaseEntity{
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    StoryStatus status = StoryStatus.UPCOMING;
+    ComicStatus status = ComicStatus.UPCOMING;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(columnDefinition = "text[]", nullable = false)
@@ -69,11 +68,13 @@ public class Comic extends BaseEntity{
     @Enumerated(EnumType.STRING)
     Gender gender; // null là cả 2
 
-    Instant publishAt;
-
     @Builder.Default
     AdminDecision adminDecision =  AdminDecision.APPROVE_PENDING;
 
+    @Column(nullable = false)
+    String slug;
+
+    // relationship
     @OneToMany(mappedBy = "comic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<Chapter> chapters;
 
@@ -87,8 +88,6 @@ public class Comic extends BaseEntity{
 
     @ManyToMany
     Set<Genre> genres;
-
-    String slug;
 
     public void generateSelfComicSlug() {
         if (this.comicName == null || this.comicName.isEmpty()) {

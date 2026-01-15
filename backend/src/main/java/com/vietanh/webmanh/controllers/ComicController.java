@@ -2,7 +2,7 @@ package com.vietanh.webmanh.controllers;
 
 import com.vietanh.webmanh.constants.ComicSortType;
 import com.vietanh.webmanh.constants.Gender;
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.dtos.requests.ComicRequest;
 import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
@@ -62,7 +62,7 @@ public class ComicController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) List<Integer> genreCodes,
             @RequestParam(required = false) List<Integer> notGenreCodes,
-            @RequestParam(required = false) StoryStatus status,
+            @RequestParam(required = false) ComicStatus status,
             @RequestParam(required = false) Integer minChapter,
             @RequestParam(required = false) Gender gender,
             @RequestParam(required = false) ComicSortType sortOption,

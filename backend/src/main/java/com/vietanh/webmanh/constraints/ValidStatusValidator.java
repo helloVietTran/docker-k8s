@@ -1,15 +1,15 @@
 package com.vietanh.webmanh.constraints;
 
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.Set;
 
 public class ValidStatusValidator
-        implements ConstraintValidator<ValidStatus, StoryStatus> {
+        implements ConstraintValidator<ValidStatus, ComicStatus> {
 
-    private Set<StoryStatus> allowStatus;
+    private Set<ComicStatus> allowStatus;
 
     @Override
     public void initialize(ValidStatus annotation) {
@@ -17,7 +17,7 @@ public class ValidStatusValidator
     }
 
     @Override
-    public boolean isValid(StoryStatus value, ConstraintValidatorContext context) {
+    public boolean isValid(ComicStatus value, ConstraintValidatorContext context) {
         if (value == null) return true;
         return allowStatus.contains(value);
     }

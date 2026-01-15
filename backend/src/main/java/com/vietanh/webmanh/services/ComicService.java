@@ -2,7 +2,7 @@ package com.vietanh.webmanh.services;
 
 import com.vietanh.webmanh.constants.ComicSortType;
 import com.vietanh.webmanh.constants.Gender;
-import com.vietanh.webmanh.constants.StoryStatus;
+import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.dtos.requests.ComicRequest;
 import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
@@ -24,7 +24,7 @@ public interface ComicService {
             String keyword,
             List<Integer> genreCodes,
             List<Integer> notGenreCodes,
-            StoryStatus status,
+            ComicStatus status,
             Integer minChapter,
             Gender gender,
             ComicSortType sortOption,

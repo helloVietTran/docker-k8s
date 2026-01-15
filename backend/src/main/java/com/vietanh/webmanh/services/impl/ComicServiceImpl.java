@@ -3,9 +3,11 @@ package com.vietanh.webmanh.services.impl;
 import com.vietanh.webmanh.constants.*;
 import com.vietanh.webmanh.dbs.postgres.models.Comic;
 import com.vietanh.webmanh.dbs.postgres.models.Genre;
+import com.vietanh.webmanh.dbs.postgres.models.PublishCalendar;
 import com.vietanh.webmanh.dbs.postgres.models.User;
 import com.vietanh.webmanh.dbs.postgres.repositories.ComicRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.GenreRepository;
+import com.vietanh.webmanh.dbs.postgres.repositories.PublishCalendarRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.UserRepository;
 import com.vietanh.webmanh.dtos.requests.ComicRequest;
 import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
@@ -40,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +55,7 @@ public class ComicServiceImpl implements ComicService {
     ComicRepository comicRepository;
     GenreRepository genreRepository;
     UserRepository userRepository;
+    PublishCalendarRepository publishCalendarRepo;
 
     ComicMapper comicMapper;
 
@@ -88,12 +92,24 @@ public class ComicServiceImpl implements ComicService {
             List<String> coverSrc = processComicCoverImage(
                     request.getCoverImage(),
                     comic.getSlug(),
-                    null // create -> không có ảnh cũ
+                    null
             );
             comic.setCoverSrc(coverSrc);
 
             Comic savedComic = comicRepository.save(comic);
 
+            // create publish calendar
+            PublishCalendar publishCalendar = PublishCalendar.builder()
+                    .publishAt(request.getPublishAt())
+                    .targetId(savedComic.getComicId())
+                    .publishStatus(PublishStatus.SCHEDULED)
+                    .publishTargetType(PublishTargetType.COMIC)
+                    .createdBy(userId)
+                    .createdAt(Instant.now())
+                    .build();
+            publishCalendarRepo.save(publishCalendar);
+
+            // mapping response
             ComicResponse response = comicMapper.toComicResponse(savedComic);
             response.setAuthorName(user.getUsername());
             response.setCoverSrc(
@@ -105,12 +121,7 @@ public class ComicServiceImpl implements ComicService {
 
             return response;
         } catch (IOException e) {
-            log.error(
-                    "ACTION=CREATE_COMIC_IMAGE STATUS=FAILED slug={} error={} msg={}",
-                    comic.getSlug(),
-                    e.getClass().getSimpleName(),
-                    e.getMessage()
-            );
+            log.error("ACTION=CREATE_COMIC_IMAGE STATUS=FAILED slug={}", comic.getSlug());
             throw new AppException(ErrorCode.FILE_STORAGE_ERROR);
         }
     }
@@ -158,10 +169,9 @@ public class ComicServiceImpl implements ComicService {
 
         } catch (IOException e) {
             log.error(
-                    "ACTION=UPDATE_COMIC_IMAGE STATUS=FAILED comicId={} slug={} error={}",
+                    "ACTION=UPDATE_COMIC_IMAGE STATUS=FAILED comicId={} slug={}",
                     comicId,
-                    comic.getSlug(),
-                    e.getClass().getSimpleName()
+                    comic.getSlug()
             );
             throw new AppException(ErrorCode.FILE_STORAGE_ERROR);
 
@@ -230,7 +240,7 @@ public class ComicServiceImpl implements ComicService {
             String keyword,
             List<Integer> genreCodes,
             List<Integer> notGenreCodes,
-            StoryStatus status,
+            ComicStatus status,
             Integer minChapter,
             Gender gender,
             ComicSortType sortOption,
@@ -287,6 +297,18 @@ public class ComicServiceImpl implements ComicService {
 
     }
 
+    /**
+     * Processes a comic cover image by generating resized versions (original, thumbnail, slider)
+     * and safely replacing existing cover images using a temporary directory.
+     *
+     * @param coverImage  the uploaded cover image
+     * @param comicSlug   the comic slug used to determine the storage path
+     * @param oldCoverSrc a list of existing cover image paths to be deleted; may be null or empty
+     *
+     * @return a list of relative paths of the newly generated cover images
+     *
+     * @throws IOException if an I/O error occurs during image processing or file operations
+     */
     private List<String> processComicCoverImage(
             MultipartFile coverImage,
             String comicSlug,

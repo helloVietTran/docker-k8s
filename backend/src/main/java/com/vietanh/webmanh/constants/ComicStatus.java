@@ -1,13 +1,13 @@
 package com.vietanh.webmanh.constants;
 
-public enum StoryStatus {
+public enum ComicStatus {
     ON_GOING("Đang ra"),
     COMPLETED("Hoàn thành"),
     UPCOMING("Sắp phát hành");
 
     private final String vi;
 
-    StoryStatus(String vi) {
+    ComicStatus(String vi) {
         this.vi = vi;
     }
 
