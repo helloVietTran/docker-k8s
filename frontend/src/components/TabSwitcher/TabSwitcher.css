@@ -1,0 +1,19 @@
+.tab-switcher .active {
+  font-weight: 700;
+  position: relative;
+}
+
+.tab-switcher li.active::after {
+  content: ' ';
+  display: block;
+  right: 0;
+  height: 3px;
+  background: #d0b32e;
+  position: absolute;
+  bottom: -7px;
+  left: 0;
+}
+
+.tab-switcher.dark li {
+  color: #ff9601;
+}
