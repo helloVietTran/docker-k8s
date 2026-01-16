@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/management/comics") // dùng chung /management/comics
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ChapterController {
+public class ChapterManagementController {
     ChapterService chapterService;
 
     @PostMapping("/{comicId}/chapters")

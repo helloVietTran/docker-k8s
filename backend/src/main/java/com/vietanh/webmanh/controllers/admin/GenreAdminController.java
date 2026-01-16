@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @RequestMapping("/admin/genres")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class GenreController {
+public class GenreAdminController {
     GenreService genreService;
 
     @PutMapping("/{genreId}")

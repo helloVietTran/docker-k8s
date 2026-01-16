@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @PreAuthorize("hasAnyRole('ADMIN', 'AUTHOR')")
-public class ComicController {
+public class ComicManagementController {
     ComicService comicService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

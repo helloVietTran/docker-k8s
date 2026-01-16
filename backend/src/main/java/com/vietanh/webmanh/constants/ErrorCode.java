@@ -8,6 +8,15 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(1999, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_SIGNATURE(1002, "Invalid token signature", HttpStatus.UNAUTHORIZED),
+
+    TOKEN_EXPIRED(1003, "Token expired", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED(1004, "Refresh token expired", HttpStatus.UNAUTHORIZED),
+
+    TOKEN_REVOKED(1005, "Token has been revoked", HttpStatus.UNAUTHORIZED),
+    TOKEN_INVALIDATED(1006, "Token invalidated due to credential change", HttpStatus.UNAUTHORIZED),
+
+    AUTH_SERVICE_UNAVAILABLE(1500, "Authentication service unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 
     PASSWORDS_DO_NOT_MATCH(41, "Password and confirmPassword not match", HttpStatus.BAD_REQUEST),
     SEND_WELCOME_MAIL_FAILED(81, "Send welcome mail failed", HttpStatus.BAD_REQUEST),
@@ -25,6 +34,8 @@ public enum ErrorCode {
     FOLLOW_NOT_FOUND(181, "Follow comic record not found", HttpStatus.NOT_FOUND),
 
     ALREADY_READING_BOOK(305, "You already read this chapter", HttpStatus.BAD_REQUEST),
+
+    INVALID_REFRESH_TOKEN(1007, "Invalid refresh token", HttpStatus.UNAUTHORIZED),
 
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),

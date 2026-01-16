@@ -12,4 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class TokenRequest {
     @NotNull
     String accessToken;
+
+    @NotNull
+    String refreshToken;
 }

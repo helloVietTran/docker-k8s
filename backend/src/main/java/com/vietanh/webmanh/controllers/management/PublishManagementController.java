@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/management/publish-calendar")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class PublishCalendarController {
+public class PublishManagementController {
     PublishCalendarService publishCalendarService;
 
     @PostMapping("/comic/{comicId}")

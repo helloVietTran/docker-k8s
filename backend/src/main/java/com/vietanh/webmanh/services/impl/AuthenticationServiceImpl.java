@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import com.vietanh.webmanh.constants.ErrorCode;
 import com.vietanh.webmanh.constants.EventTopic;
@@ -18,9 +19,9 @@ import com.vietanh.webmanh.dtos.events.UserCreatedEvent;
 import com.vietanh.webmanh.exception.AppException;
 import com.vietanh.webmanh.mappers.UserMapper;
 import com.vietanh.webmanh.services.AuthenticationService;
-import com.vietanh.webmanh.utils.AuthUtil;
 import com.vietanh.webmanh.utils.EventPublisher;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -47,9 +48,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
+    StringRedisTemplate redisTemplate;
+    static final String BLACK_LIST_TOKEN_PREFIX = "blacklist:token:";
+    static final String CREDENTIALS_UPDATED_PATTERN = "credentials_updated:%d";
+
     //repo
     UserRepository userRepository;
-    DisabledTokenRepository disabledTokenRepository;
     RoleRepository roleRepository;
     ResetPasswordTokenRepository resetPasswordTokenRepository;
     VerifyTokenRepository verifyTokenRepository;
@@ -97,11 +101,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public IntrospectResponse introspect(TokenRequest request) {
         var token = request.getAccessToken();
 
-
         boolean isValid = true;
 
         try {
-            verifyToken(token, false);
+            this.verifyToken(token, false);
         } catch (AppException e) {
             isValid = false;
         }
@@ -115,49 +118,70 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if (!isAuthenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
-
-        var accessToken = generateToken(user, false);
-        var refreshToken = generateToken(user, true);
+        var accessToken = this.generateToken(user, false);
+        var refreshToken = this.generateToken(user, true);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .isAuthenticated(true)
+                .user(userMapper.toUserResponse(user))
                 .build();
     }
 
     @Override
     public void logout(TokenRequest request) throws ParseException {
-        try {
-            var signAccessToken = verifyToken(request.getAccessToken(), true);
+        long ttlMillis;
+        String jid;
+        Date exp;
 
-            String jid = signAccessToken.getJWTClaimsSet().getJWTID();
-            Date expiryTime = signAccessToken.getJWTClaimsSet().getExpirationTime();
+        // set access token to blacklist
+        SignedJWT accessToken = this.verifyToken(request.getAccessToken(), false);
+        jid = accessToken.getJWTClaimsSet().getJWTID();
+        exp = accessToken.getJWTClaimsSet().getExpirationTime();
+        ttlMillis = exp.getTime() - Instant.now().toEpochMilli();
 
-            DisabledToken disabledToken =
-                    DisabledToken.builder().id(jid).expiryTime(expiryTime).build();
+        redisTemplate.opsForValue()
+                .set( BLACK_LIST_TOKEN_PREFIX + jid, "1", ttlMillis, TimeUnit.MILLISECONDS);
 
-            disabledTokenRepository.save(disabledToken);
-        } catch (AppException exception) {
-            throw new AppException(ErrorCode.INVALID_TOKEN);
-        }
+        // set refresh token to blacklist
+        SignedJWT refreshToken = this.verifyToken(request.getRefreshToken(), true);
+        jid = refreshToken.getJWTClaimsSet().getJWTID();
+        exp = refreshToken.getJWTClaimsSet().getExpirationTime();
+        ttlMillis = exp.getTime() - Instant.now().toEpochMilli();
+
+        redisTemplate.opsForValue()
+                .set( BLACK_LIST_TOKEN_PREFIX + jid, "1", ttlMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException {
-        var signedJWT = verifyToken(request.getRefreshToken(), true);
+        SignedJWT signedJWT = this.verifyToken(request.getRefreshToken(), true);
 
-        var userId = signedJWT.getJWTClaimsSet().getSubject();
+        // generate new token
+        Integer userId = Integer.parseInt(
+                signedJWT.getJWTClaimsSet().getSubject()
+        );
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
-        var user = userRepository.findById(Integer.parseInt(userId)).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        String accessToken = this.generateToken(user, false);
+        String refreshToken = this.generateToken(user, true);
 
-        var accessToken = generateToken(user, false);
+        // set token to blacklist
+        String jid = signedJWT.getJWTClaimsSet().getJWTID();
+        Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
+        long ttlMillis = exp.getTime() - Instant.now().toEpochMilli();
+
+        redisTemplate.opsForValue()
+                .set( BLACK_LIST_TOKEN_PREFIX + jid, "1", ttlMillis, TimeUnit.MILLISECONDS);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .isAuthenticated(true)
                 .build();
     }
@@ -171,7 +195,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User user = userOptional.get();
 
-        String token = generateToken(user, false);
+        String token = this.generateToken(user, false);
         Instant now = Instant.now();
 
         ResetPasswordToken resetPasswordToken = ResetPasswordToken.builder()
@@ -191,9 +215,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void changePasswordWithResetToken(ChangePasswordWithTokenRequest request) throws ParseException {
-        SignedJWT signedJWT = verifyToken(request.getResetToken(), false);
+        SignedJWT signedJWT = this.verifyToken(request.getResetToken(), false);
         Integer userId = Integer.parseInt(signedJWT.getJWTClaimsSet().getSubject());
 
+        // check reset token
         Optional<ResetPasswordToken> tokenOptional =
                 resetPasswordTokenRepository.findLatestValidTokenByUserId(userId, Instant.now());
         if (tokenOptional.isEmpty()) throw new AppException(ErrorCode.TOKEN_NOT_EXISTED);
@@ -202,16 +227,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!resetPasswordToken.getHashedToken().equals(request.getResetToken()))
             throw new AppException(ErrorCode.INVALID_TOKEN);
 
+        // change user password
         User user = userRepository
                 .findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        resetPasswordToken.setUsed(true); // đánh dấu dc dùng
-
+        resetPasswordToken.setUsed(true); // token đã được dùng
         resetPasswordTokenRepository.save(resetPasswordToken);
         userRepository.save(user);
+
+        // logout trên tất cả thiết bị khác
+        String credentialUpdatedKey = String.format(CREDENTIALS_UPDATED_PATTERN, userId);
+        redisTemplate.opsForValue()
+                .set(credentialUpdatedKey,
+                        String.valueOf(Instant.now().toEpochMilli()),
+                        REFRESHABLE_DURATION ,
+                        TimeUnit.SECONDS);
     }
 
     @Override
@@ -230,11 +263,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
+
+        // logout trên tất cả thiết bị khác
+        String credentialUpdatedKey = String.format(CREDENTIALS_UPDATED_PATTERN, user.getUserId());
+        redisTemplate.opsForValue()
+                .set(credentialUpdatedKey,
+                        String.valueOf(Instant.now().toEpochMilli()),
+                        REFRESHABLE_DURATION ,
+                        TimeUnit.SECONDS);
     }
 
-    // mail ảo => không có mail
-    // mail real => ai xác thực cũng được => mail ông này đã xác thực
-    // mục đích đã đạt được => không cần overthinking
     @Override
     public void verifyAccount(VerifyAccountRequest request){
         Optional<VerifyAccountToken> tokenOptional =
@@ -255,6 +293,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         verifyTokenRepository.deleteById(verifyAccountToken.getVerifyToken());
     }
 
+    /**
+     * Tạo mới một JWT Token.
+     * @param user Thông tin người dùng để đưa vào payload.
+     * @param isRefresh Nếu true, tạo Refresh Token với thời gian sống dài (REFRESHABLE_DURATION).
+     * Nếu false, tạo Access Token với thời gian sống ngắn (ACCESS_DURATION).
+     * @return Chuỗi JWT đã được ký.
+     */
     private String generateToken(User user, boolean isRefresh) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         Long duration = ACCESS_DURATION;
@@ -287,38 +332,60 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+    /**
+     * Kiểm tra tính hợp lệ của Token (Chữ ký, thời gian hết hạn, blacklist, bảo mật mật khẩu).
+     * @param token Chuỗi JWT cần xác thực.
+     * @param isRefresh Nếu true, tính toán thời gian hết hạn dựa trên IssueTime + REFRESHABLE_DURATION
+     * Nếu false, kiểm tra thời gian hết hạn chuẩn của Access Token.
+     * @return Đối tượng SignedJWT sau khi đã xác thực thành công.
+     * @throws AppException Nếu token hết hạn, bị thu hồi hoặc không hợp lệ.
+     */
     private SignedJWT verifyToken(String token, boolean isRefresh) {
         try {
             JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
 
             SignedJWT signedJWT = SignedJWT.parse(token);
 
-            Date expiryTime = (isRefresh)
-                    ? new Date(signedJWT
-                    .getJWTClaimsSet()
-                    .getIssueTime()
-                    .toInstant()
-                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
-                    .toEpochMilli())
+            // nếu là refresh thì cộng thêm thời gian hết hạn
+            Date expiryTime = (isRefresh) ? new Date(signedJWT
+                        .getJWTClaimsSet()
+                        .getIssueTime()
+                        .toInstant()
+                        .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                        .toEpochMilli())
                     : signedJWT.getJWTClaimsSet().getExpirationTime();
 
             boolean isVerified = signedJWT.verify(verifier);
 
             if (!(isVerified && expiryTime.after(new Date()))) {
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
+                throw new AppException(ErrorCode.TOKEN_EXPIRED);
             }
 
-            // logout token ?
-            if (disabledTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            // token có trong black list hay không
+            String jid = signedJWT.getJWTClaimsSet().getJWTID();
+
+            if(Boolean.TRUE.equals(redisTemplate.hasKey(BLACK_LIST_TOKEN_PREFIX + jid))){
+                throw new AppException(ErrorCode.TOKEN_REVOKED);
+            }
+
+            // logout trên nhiều thiết bị khi có một thiết bị đổi mật khẩu
+            Integer userId = Integer.parseInt(signedJWT.getJWTClaimsSet().getSubject());
+
+            String value = redisTemplate.opsForValue()
+                    .get(String.format(CREDENTIALS_UPDATED_PATTERN, userId));
+
+            Instant tokenIat = signedJWT.getJWTClaimsSet().getIssueTime().toInstant();
+
+            if (value != null) {
+                Instant passwordChangedAt = Instant.ofEpochMilli(Long.parseLong(value));
+                if (tokenIat.isBefore(passwordChangedAt)) {
+                    throw new AppException(ErrorCode.TOKEN_INVALIDATED);
+                }
             }
 
             return signedJWT;
-
         } catch (JOSEException | ParseException e) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
     }
 
