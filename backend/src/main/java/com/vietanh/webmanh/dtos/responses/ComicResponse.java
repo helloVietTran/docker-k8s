@@ -1,6 +1,6 @@
 package com.vietanh.webmanh.dtos.responses;
 
-import com.vietanh.webmanh.constants.AdminDecision;
+import com.vietanh.webmanh.constants.ReviewStatus;
 import com.vietanh.webmanh.constants.Gender;
 import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.dbs.postgres.models.Genre;
@@ -39,5 +39,5 @@ public class ComicResponse {
 
     List<String> coverSrc;
 
-    AdminDecision decision;
+    ReviewStatus decision;
 }

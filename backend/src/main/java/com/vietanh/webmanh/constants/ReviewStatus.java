@@ -3,14 +3,14 @@ package com.vietanh.webmanh.constants;
 import lombok.Getter;
 
 @Getter
-public enum AdminDecision {
+public enum ReviewStatus {
     APPROVE_PENDING("Chờ duyệt"),
     APPROVED("Đã chấp thuận"),
     REJECTED("Từ chối");
 
     private final String vi;
 
-    AdminDecision(String vi) {
+    ReviewStatus(String vi) {
         this.vi = vi;
     }
 

@@ -8,7 +8,7 @@ public class ClientUtil {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
-        // Hash chuỗi "ip + userAgent" để bảo mật và gọn nhẹ
+
         return DigestUtils.md5Hex(ip + userAgent);
     }
 }

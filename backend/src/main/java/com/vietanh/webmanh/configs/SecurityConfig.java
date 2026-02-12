@@ -69,11 +69,12 @@ public class SecurityConfig {
 
                         // Admin
                         .requestMatchers(ADMIN_ENDPOINTS)
-                        .hasAuthority("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         // Management (USER + ADMIN)
                         .requestMatchers(MANAGEMENT_ENDPOINTS)
-                        .hasAnyAuthority("AUTHOR", "ADMIN")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_AUTHOR")
+                        // hasAnyRole không cần prefix ROLE_
 
                         // authenticated
                         .requestMatchers(AUTHENTICATED_ENDPOINTS)

@@ -1,6 +1,6 @@
 package com.vietanh.webmanh.dbs.postgres.models;
 
-import com.vietanh.webmanh.constants.AdminDecision;
+import com.vietanh.webmanh.constants.ReviewStatus;
 import com.vietanh.webmanh.constants.Gender;
 import com.vietanh.webmanh.constants.ComicStatus;
 import jakarta.persistence.*;
@@ -30,6 +30,10 @@ public class Comic extends BaseEntity{
     String comicName;
 
     String otherName;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    ReviewStatus reviewStatus;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -67,9 +71,6 @@ public class Comic extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     Gender gender; // null là cả 2
-
-    @Builder.Default
-    AdminDecision adminDecision =  AdminDecision.APPROVE_PENDING;
 
     @Column(nullable = false)
     String slug;

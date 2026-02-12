@@ -1,7 +1,7 @@
 package com.vietanh.webmanh.controllers.management;
 
-import com.vietanh.webmanh.dtos.requests.ComicRequest;
-import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
+import com.vietanh.webmanh.dtos.requests.ComicCreationRequest;
+import com.vietanh.webmanh.dtos.requests.ComicUpdateRequest;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
 import com.vietanh.webmanh.services.ComicService;
@@ -21,7 +21,7 @@ public class ComicManagementController {
     ComicService comicService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<ComicResponse> createComic(@ModelAttribute ComicRequest request) {
+    public ApiResponse<ComicResponse> createComic(@ModelAttribute ComicCreationRequest request) {
 
         return ApiResponse.<ComicResponse>builder()
                 .result(comicService.createComic(request))
@@ -31,7 +31,7 @@ public class ComicManagementController {
     @PutMapping(value = "/{comicId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ComicResponse> updateComic(
             @PathVariable Integer comicId,
-            @ModelAttribute UpdateComicRequest request) {
+            @ModelAttribute ComicUpdateRequest request) {
 
         return ApiResponse.<ComicResponse>builder()
                 .result(comicService.updateComic(request, comicId))

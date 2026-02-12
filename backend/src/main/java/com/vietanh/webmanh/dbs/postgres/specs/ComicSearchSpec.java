@@ -1,6 +1,6 @@
 package com.vietanh.webmanh.dbs.postgres.specs;
 
-import com.vietanh.webmanh.constants.AdminDecision;
+import com.vietanh.webmanh.constants.ReviewStatus;
 import com.vietanh.webmanh.constants.Gender;
 import com.vietanh.webmanh.constants.ComicStatus;
 import com.vietanh.webmanh.dbs.postgres.models.Comic;
@@ -36,7 +36,7 @@ public class ComicSearchSpec {
     public ComicSearchSpec onlyApproved() {
         specs.add((root, query, cb) ->
                 root.get("adminDecision").in(
-                        AdminDecision.APPROVED
+                        ReviewStatus.APPROVED
                 )
         );
         return this;

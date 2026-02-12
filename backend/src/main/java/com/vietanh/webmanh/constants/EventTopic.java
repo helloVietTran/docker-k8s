@@ -7,7 +7,8 @@ import lombok.Getter;
 public enum EventTopic {
 
     USER_CREATED("user.created"),
-    USER_FORGOT_EVENT("user.forgot");
+    USER_FORGOT_EVENT("user.forgot"),
+    COMIC_CREATED_EVENT("comic.created");
 
     private final String topicName;
 

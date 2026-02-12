@@ -1,9 +1,9 @@
 package com.vietanh.webmanh.controllers.admin;
 
-import com.vietanh.webmanh.constants.AdminDecision;
+import com.vietanh.webmanh.constants.ReviewStatus;
 import com.vietanh.webmanh.dtos.responses.ApiResponse;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
-import com.vietanh.webmanh.services.AdminService;
+import com.vietanh.webmanh.services.ReviewService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReviewController {
-    AdminService adminService;
+    ReviewService reviewService;
 
     @PatchMapping("/comics/{comicId}")
-    ApiResponse<ComicResponse> approveComic(
+    ApiResponse<ComicResponse> reviewComic(
             @PathVariable Integer comicId,
-            @RequestParam(required = false) AdminDecision decision
+            @RequestParam(name = "review") ReviewStatus reviewStatus
     ) {
 
         return ApiResponse.<ComicResponse>builder()
-                .result(adminService.approveComic(comicId, decision))
+                .result(reviewService.reviewComic(comicId, reviewStatus))
                 .build();
     }
 

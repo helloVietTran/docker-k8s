@@ -3,14 +3,15 @@ package com.vietanh.webmanh.services.impl;
 import com.vietanh.webmanh.constants.*;
 import com.vietanh.webmanh.dbs.postgres.models.Comic;
 import com.vietanh.webmanh.dbs.postgres.models.Genre;
-import com.vietanh.webmanh.dbs.postgres.models.PublishCalendar;
+import com.vietanh.webmanh.dbs.postgres.models.ReleaseCalendar;
 import com.vietanh.webmanh.dbs.postgres.models.User;
 import com.vietanh.webmanh.dbs.postgres.repositories.ComicRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.GenreRepository;
-import com.vietanh.webmanh.dbs.postgres.repositories.PublishCalendarRepository;
+import com.vietanh.webmanh.dbs.postgres.repositories.ReleaseCalendarRepository;
 import com.vietanh.webmanh.dbs.postgres.repositories.UserRepository;
-import com.vietanh.webmanh.dtos.requests.ComicRequest;
-import com.vietanh.webmanh.dtos.requests.UpdateComicRequest;
+import com.vietanh.webmanh.dtos.events.ComicCreatedEvent;
+import com.vietanh.webmanh.dtos.requests.ComicCreationRequest;
+import com.vietanh.webmanh.dtos.requests.ComicUpdateRequest;
 import com.vietanh.webmanh.dtos.responses.ComicResponse;
 import com.vietanh.webmanh.dtos.responses.PageResponse;
 import com.vietanh.webmanh.exception.AppException;
@@ -33,7 +34,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,7 +44,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -51,10 +53,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ComicServiceImpl implements ComicService {
+    KafkaTemplate<String, Object> kafkaTemplate;
+
     ComicRepository comicRepository;
     GenreRepository genreRepository;
     UserRepository userRepository;
-    PublishCalendarRepository publishCalendarRepo;
+    ReleaseCalendarRepository releaseCalendarRepository;
 
     ComicMapper comicMapper;
 
@@ -63,11 +67,11 @@ public class ComicServiceImpl implements ComicService {
     String imageRoot;
 
     @Override
-    public ComicResponse createComic(ComicRequest request) {
+    public ComicResponse createComic(ComicCreationRequest request) {
 
         Integer userId = AuthUtil.getCurrentUserId();
 
-        // 1. Validate image
+        // 1. validate image
         if (!ImageUtil.isValidImage(request.getCoverImage())) {
             throw new AppException(ErrorCode.REQUIRED_IMAGE);
         }
@@ -77,47 +81,51 @@ public class ComicServiceImpl implements ComicService {
         // 2. find genres
         Set<Genre> genres = genreRepository.findByCodeIn(request.getGenreCodes());
         comic.setGenres(genres);
-
         comic.generateSelfComicSlug();
+        comic.setReviewStatus(ReviewStatus.APPROVE_PENDING);
 
-        // 3. Find author
-        User user = userRepository.findById(userId)
+        // 3. find author
+        User author = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        comic.setAuthor(user);
+        comic.setAuthor(author);
 
         try {
-            // 4. Process image
-            List<String> coverSrc = processComicCoverImage(
+            // 4. process image
+            List<String> coverSrc = this.processComicCoverImage(
                     request.getCoverImage(),
                     comic.getSlug(),
                     null
             );
             comic.setCoverSrc(coverSrc);
-
             Comic savedComic = comicRepository.save(comic);
 
-            // create publish calendar
-            PublishCalendar publishCalendar = PublishCalendar.builder()
-                    .publishAt(request.getPublishAt())
-                    .targetId(savedComic.getComicId())
-                    .publishStatus(PublishStatus.SCHEDULED)
-                    .publishTargetType(PublishTargetType.COMIC)
-                    .createdBy(userId)
-                    .createdAt(Instant.now())
+            // 5. create publish calendar
+            ReleaseCalendar releaseCalendar = ReleaseCalendar.builder()
+                    .releaseAt(request.getPublishAt())
+                    .comicId(savedComic.getComicId())
+                    .releaseStatus(ReleaseStatus.SCHEDULED)
+                    .authorId(userId)
                     .build();
-            publishCalendarRepo.save(publishCalendar);
+            ReleaseCalendar savedReleaseCalendar = releaseCalendarRepository.save(releaseCalendar);
 
-            // mapping response
-            ComicResponse response = comicMapper.toComicResponse(savedComic);
-            response.setAuthorName(user.getUsername());
-            response.setCoverSrc(
-                    savedComic.getCoverSrc()
-                            .stream()
-                            .map(PathUtil::toUrlPath)
-                            .toList()
-            );
+            // 6. send notification mail
+            ComicCreatedEvent event = ComicCreatedEvent.builder()
+                    .topicName(EventTopic.COMIC_CREATED_EVENT.getTopicName())
+                    .comicId(savedComic.getComicId())
+                    .comicName(savedComic.getComicName())
+                    .authorEmail(author.getEmail())
+                    .authorId(author.getUserId())
+                    .releaseAt(savedReleaseCalendar.getReleaseAt())
+                    .build();
 
-            return response;
+//            kafkaTemplate.send(EventTopic.COMIC_CREATED_EVENT.getTopicName(), event)
+//                    .whenComplete((result, ex) -> {
+//                        log.error("ACTION=SEND_CREATED_COMIC_EVENT status=FAILED topicName={} comicId={}",
+//                                event.getTopicName(),
+//                                event.getComicName());
+//                    });
+
+            return this.mapToComicResponse(comic);
         } catch (IOException e) {
             log.error("ACTION=CREATE_COMIC_IMAGE STATUS=FAILED slug={}", comic.getSlug());
             throw new AppException(ErrorCode.FILE_STORAGE_ERROR);
@@ -125,7 +133,7 @@ public class ComicServiceImpl implements ComicService {
     }
 
     @Override
-    public ComicResponse updateComic(UpdateComicRequest request, Integer comicId) {
+    public ComicResponse updateComic(ComicUpdateRequest request, Integer comicId) {
         Integer userId = AuthUtil.getCurrentUserId();
 
         Comic comic = comicRepository.findById(comicId)
@@ -175,11 +183,14 @@ public class ComicServiceImpl implements ComicService {
         }
     }
 
+    /*
+    * Chỉ lấy comic đã được admin duyệt
+    * */
     @Override
     public ComicResponse getComicById(Integer comicId) {
-        Comic comic = comicRepository.findByComicIdAndAdminDecisionIn(
+        Comic comic = comicRepository.findByComicIdAndReviewStatusIn(
                         comicId,
-                        List.of(AdminDecision.APPROVED))
+                        List.of(ReviewStatus.APPROVED))
                 .orElseThrow(() -> new AppException(ErrorCode.COMIC_NOT_EXISTED));
 
         ComicResponse response = comicMapper.toComicResponse(comic);
@@ -309,11 +320,17 @@ public class ComicServiceImpl implements ComicService {
             MultipartFile coverImage,
             String comicSlug,
             List<String> oldCoverSrc
-    ) throws IOException  {
+    ) throws IOException {
 
         Path root = Paths.get(imageRoot);
+
+        // final: /imageRoot/comic/{comicSlug}
         Path finalDir = root.resolve("comic").resolve(comicSlug);
-        Path tempDir = finalDir.resolve("comic/_tmp");
+
+        // temp: /imageRoot/comic/_tmp/{comicSlug}
+        Path tempDir = root.resolve("comic")
+                .resolve("_tmp")
+                .resolve(comicSlug);
 
         List<Path> createdFiles = new ArrayList<>();
 
@@ -365,7 +382,7 @@ public class ComicServiceImpl implements ComicService {
                 coverSrc.add(root.relativize(finalPath).toString());
             }
 
-            // 7. Xóa thư mục temp
+            // 7. Xóa thư mục temp (comicSlug)
             Files.deleteIfExists(tempDir);
 
             return coverSrc;
@@ -386,5 +403,18 @@ public class ComicServiceImpl implements ComicService {
             }
             throw e;
         }
+    }
+
+    private ComicResponse mapToComicResponse(Comic comic){
+        ComicResponse response = comicMapper.toComicResponse(comic);
+        response.setAuthorName(comic.getAuthor().getUsername());
+        response.setCoverSrc(
+                comic.getCoverSrc()
+                        .stream()
+                        .map(PathUtil::toUrlPath)
+                        .toList()
+        );
+
+        return response;
     }
 }

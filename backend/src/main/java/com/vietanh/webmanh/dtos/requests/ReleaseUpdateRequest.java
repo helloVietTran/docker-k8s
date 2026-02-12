@@ -1,6 +1,5 @@
 package com.vietanh.webmanh.dtos.requests;
 
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -12,9 +11,8 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UpdatePublishCalendarRequest {
+public class ReleaseUpdateRequest {
 
     @NotNull
-    @Future(message = "PUBLISH_TIMESTAMP_ERROR")
-    Instant publishAt;
+    Instant releaseAt;
 }

@@ -1,6 +1,6 @@
 package com.vietanh.webmanh.constants;
 
-public enum PublishStatus {
+public enum ReleaseStatus {
     SCHEDULED,
     PUBLISHED,
     CANCELED,
