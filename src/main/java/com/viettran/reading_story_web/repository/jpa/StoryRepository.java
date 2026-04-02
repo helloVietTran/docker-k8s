@@ -1,8 +1,7 @@
 package com.viettran.reading_story_web.repository.jpa;
 
-import com.viettran.reading_story_web.entity.mysql.Story;
-import com.viettran.reading_story_web.enums.Gender;
-import com.viettran.reading_story_web.enums.StoryStatus;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.viettran.reading_story_web.entity.mysql.Story;
+import com.viettran.reading_story_web.enums.Gender;
+import com.viettran.reading_story_web.enums.StoryStatus;
 
 @Repository
 public interface StoryRepository extends JpaRepository<Story, Integer> {

@@ -2,8 +2,6 @@ package com.viettran.reading_story_web.service;
 
 import java.util.Optional;
 
-import com.viettran.reading_story_web.repository.jpa.ReadingHistoryRepository;
-import com.viettran.reading_story_web.repository.jpa.UserRepository;
 import org.springframework.stereotype.Service;
 
 import com.viettran.reading_story_web.dto.response.ReactionResponse;
@@ -15,6 +13,7 @@ import com.viettran.reading_story_web.exception.AppException;
 import com.viettran.reading_story_web.exception.ErrorCode;
 import com.viettran.reading_story_web.repository.jpa.CommentRepository;
 import com.viettran.reading_story_web.repository.jpa.ReactionRepository;
+import com.viettran.reading_story_web.repository.jpa.UserRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

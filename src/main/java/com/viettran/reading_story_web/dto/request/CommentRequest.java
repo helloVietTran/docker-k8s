@@ -13,10 +13,10 @@ import lombok.experimental.FieldDefaults;
 public class CommentRequest {
     String parentCommentId;
 
-    @NotNull(message = "SOME_FIELDS_REQUIRED")
+    @NotNull
     int storyId;
 
-    @NotNull(message = "SOME_FIELDS_REQUIRED")
+    @NotNull
     String content;
 
     int atChapter;

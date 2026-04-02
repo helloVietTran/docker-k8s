@@ -29,11 +29,12 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     String content;
 
-    String replyTo;
-
-    // comment cấp 2 sẽ chứa parentCommentId của comment cấp 1
-    // comment cấp 1 sẽ không chứa parentCommentId
     String parentCommentId;
+
+    @Builder.Default
+    int leftVal = 0;
+
+    int rightVal = 0;
 
     @Builder.Default
     int likeCount = 0;
@@ -57,5 +58,4 @@ public class Comment extends BaseEntity {
     @JsonManagedReference
     @OneToMany
     List<Reaction> reactions;
-    // dựa vào createdAt để xác định index của comment
 }

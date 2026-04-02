@@ -3,7 +3,6 @@ package com.viettran.reading_story_web.config;
 import java.time.Instant;
 import java.util.HashSet;
 
-import com.viettran.reading_story_web.repository.jpa.RoleRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +12,7 @@ import com.viettran.reading_story_web.entity.mysql.Level;
 import com.viettran.reading_story_web.entity.mysql.Role;
 import com.viettran.reading_story_web.entity.mysql.User;
 import com.viettran.reading_story_web.repository.jpa.LevelRepository;
+import com.viettran.reading_story_web.repository.jpa.RoleRepository;
 import com.viettran.reading_story_web.repository.jpa.UserRepository;
 
 import lombok.AccessLevel;

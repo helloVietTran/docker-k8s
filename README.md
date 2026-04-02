@@ -1,118 +1,264 @@
-# 📚 VieTruyen – WEB ĐỌC TRUYỆN TRANH ONLINE
-  VieTruyen là một website đọc truyện tranh online tập trung giải quyết các bài toán thực tế ở backend như: phân quyền, caching, cron job, mua bán vật phẩm, lưu lịch sử đọc, quản lý nội dung và tối ưu hiệu năng.
-
-Mục tiêu dự án:
-
-1. Là cơ sở để xây dựng đồ án tốt nghiệp 
-
-2. Áp dụng các nghiệp vụ gần với hệ thống thực tế
-
-## 🔥 II. Mô tả một số bài toán nổi bật đã xử lý
-
-### 1. Xác thực và phân quyền người dùng (RBAC + Token Whitelist)
-
-Hệ thống áp dụng mô hình **RBAC (Role-Based Access Control)** với 3 actor chính:
-
-- **Admin**: quản lý hệ thống, duyệt nội dung
-- **Author**: đăng và quản lý truyện/chapter của mình
-- **User**: đọc và tương tác nội dung
-
-Quy trình xác thực sử dụng **JWT**, kết hợp với cơ chế **Token Whitelist** để tăng cường bảo mật.  
-Mỗi token hợp lệ phải tồn tại trong whitelist, cho phép hệ thống:
-
-- Chủ động **thu hồi token** khi người dùng đăng xuất
-- Kiểm soát phiên đăng nhập trên nhiều thiết bị
-- Giảm rủi ro khi token bị lộ
-
-Phân quyền được kiểm soát ở cả **route-level** và **business-level**, đảm bảo mỗi actor chỉ có thể truy cập đúng phạm vi chức năng được cấp.
+# 📚 VieTruyen – Backend API
+## Nền tảng đọc truyện tranh online với xử lý bài toán thực tế
 
 ---
 
-###  2. Quy trình đăng truyện có lịch phát hành và kiểm duyệt
+## I. Mô tả dự án
 
-Hệ thống hỗ trợ **Author đăng truyện/chapter kèm lịch phát hành (schedule publish)** theo quy trình sau:
+### 📖 Reading Story Web Backend API
+**VieTruyen** là nền tảng backend xây dựng cho website đọc truyện tranh online, tập trung vào giải quyết các bài toán thực tế như:
 
-1. Author tạo truyện/chapter và thiết lập thời điểm phát hành mong muốn
-2. Nội dung được chuyển sang trạng thái **chờ duyệt**
-3. **Admin thực hiện kiểm duyệt nội dung** trước khi cho phép phát hành
+- **Phân quyền người dùng** (RBAC: Admin, Author, User) với JWT & Token Whitelist
+- **Quản lý nội dung** có lịch phát hành và quy trình kiểm duyệt: tác giả đăng truyện -> admin review -> publish truyện
+- **Hệ thống comment phân cấp** tối ưu dung lượng đọc (Nested Set Model)
+- **Caching** với Redis giảm tải database
+- **Hệ thống shop** và **xếp hạng người dùng** theo điểm & level
+- **Quản lý tệp hình ảnh** trên cloud (Cloudinary)
 
-Để đảm bảo luồng phát hành không bị gián đoạn:
-- Nếu **quá thời điểm phát hành đã định mà Admin chưa duyệt**, hệ thống sẽ **tự động gửi thông báo nhắc nhở đến Admin**
-- Sau khi Admin duyệt thành công, **thời gian phát hành được tự động cộng thêm 1 ngày**, đảm bảo nội dung vẫn được hiển thị hợp lệ và không bị “miss lịch”
+## II. Problem Solutions
 
-Giải pháp này giúp:
-- Tách biệt rõ trách nhiệm Author – Admin
-- Tránh tình trạng nội dung bị treo do chậm duyệt
-- Giữ trải nghiệm nhất quán cho người đọc
+### 🎯 1. Nested Set Model – Comment System (Read-Heavy Optimization)
 
----
+#### Bài toán đặt ra:
+- Comment theo **hình thức cây** (tree structure) với **depth không giới hạn**
+- Tần suất **đọc comment rất cao** (mỗi lần mở chapter)
+- Tần suất **viết comment ít hơn** so với đọc
+- Cần **truy vấn nhanh** toàn bộ cây comment
 
-## 3. Nested Comment – Thiết kế tối ưu cho đọc dữ liệu (Read-heavy)
+#### Giải pháp: Nested Set Model
 
-### 3.1 Bài toán đặt ra
+**Nguyên tắc hoạt động**:
 
-- Hệ thống hỗ trợ **comment dạng cây**, reply **không giới hạn cấp**
-- Comment được load **mỗi lần người dùng mở chapter**
-- Tần suất **đọc comment cao hơn rất nhiều so với ghi**
+Mỗi node (comment) được gán 2 giá trị: `left_val` và `right_val`. Cây được "duyệt tuyến tính" từ trái sang phải:
 
-➡️ Mục tiêu: **đọc nhanh – truy vấn ít – dữ liệu nhất quán**
-
----
-
-### 3.2 Mô hình dữ liệu sử dụng
-
-Hệ thống sử dụng **Nested Set Model**, phù hợp với bài toán **đọc nhiều – ghi ít**.
-
-```text
-comment
-- comment_id
-- parent_comment_id
-- story_id
-- chapter_id
-- content
-- comment_left
-- comment_right
-- user_id
-- created_at
 ```
+                    Comment A (1, 12)
+                   /         \
+            Comment B         Comment C (9, 10)
+            (2, 7)              (8, 11)
+           /   |   \
+          D    E    F
+        (3,4)(5,6)(7,8)
+```
+
+**Các thao tác và độ phức tạp**:
+
+| Thao tác | SQL | Độ phức tạp |
+|---------|-----|-----------|
+| **Lấy toàn bộ cây** | `SELECT * WHERE left >= L AND right <= R ORDER BY left` | **O(1)** – 1 query |
+| **Thêm comment** | Update `left/right` của các node cần shift, insert node mới | **O(N)** – N là số node |
+| **Xóa subtree** | Delete và update các node phía sau | **O(N)** |
+| **Lấy parent** | `SELECT * WHERE left < L AND right > R ORDER BY (right-left) LIMIT 1` | **O(N)** nhưng nhanh |
+
+**Lợi ích**:
+- **1 query** để lấy toàn bộ cây (vs. N+1 queries với recursive)
+- Không cần `@OneToMany` relationships – giảm memory
+- Dễ **render tree** ở client theo left/right order
+- Xóa subtree cũng chỉ vài queries
+- **Hiệu năng**: ~10x nhanh hơn so với recursive queries
+
+**Nhược điểm**:
+- Thêm/xóa comment phức tạp hơn (phải shift values)
+- Update khi có sự thay đổi structure
+
 ---
-  
-**Note"** Các solution đã được áp dụng vào repo đồ án tốt nghiệp (branch develop) based trên repo này: https://github.com/helloVietTran/graduate-project
 
-## III. Tính năng chính
-- Tìm kiếm truyện theo nhiều tiêu chí (số chapter, thời gian đăng, truyện hot hay không)
-- Lưu lịch sử đọc truyện theo 2 cách: lưu lịch sử theo thiết bị (local storage) và lưu lịch sử theo tài khoản
-- Chức năng kiếm coin bằng cách đăng nhập hàng ngày
-- Xây dựng chức năng mua vật phẩm cửa hàng (mua khung avatar, hiệu ứng text) 
-- Cung cấp API quản lý truyện, quản lý chapter, quản lý người dùng, ... và quản lý tệp ảnh trên cloud
-- Xây dựng tính năng tính toán level bằng cách đọc truyện, có hiệu ứng tên khác biệt giữa các level
-- Phân quyền theo vai trò, có 3 vai trò user, author và admin.
-- Tính năng bảng xếp hạng người dùng thúc đẩy người dùng ở lại trang web ( xếp người dùng theo số điểm và theo level) được tối ưu bằng redis, revalidate theo từng ngày.
-- Chức năng bình luận theo nested set model tối ưu cho việc đọc
+### 🎯 2. Redis Caching – Optimize Database Load
 
-## 🛠️ IV. Công nghệ nổi bật
-     Spring Boot, Spring Security, Spring JPA, Spring Thymeleaf, Redis, MySQL
-     
-## Cài đặt & chạy dự án
+**Bài toán**: Top stories, ranking, hot content được access **hằng ngày hàng nghìn lần** → tải quá cao lên database
 
-### Yêu cầu môi trường
+**Giải pháp**: Lưu cache vào Redis với TTL (Time-To-Live)
 
-- **JDK**: 17+
-- **Maven**: 3.8+
+**Cache Models**:
+
+**a) StoryCache** (TTL: 1 giờ)
+```java
+@RedisHash(value = "StoryCache", timeToLive = 3600)
+public class StoryCache {
+    @Id
+    int id;
+    String name;
+    String authorName;
+    int viewCount;
+    double rate;
+    int commentCount;
+    boolean hot;
+    // ... other fields
+}
+```
+
+**b) Ranking Cache** (Revalidate hàng ngày)
+```java
+// Dùng Redis Sorted Set để lưu ranking
+// Key: "ranking:daily"
+// Score: points hoặc level
+// Member: userId
+```
+
+**Chiến lược caching**:
+
+1. **Cache-Aside Pattern**:
+```java
+public List<StoryResponse> getHotStories() {
+    // 1. Kiểm tra Redis
+    List<StoryCache> cached = storyCacheRepository.findHotStories();
+    if (!cached.isEmpty()) {
+        return toResponses(cached);
+    }
+    
+    // 2. Nếu miss → query database
+    List<Story> stories = storyRepository.findHotStories();
+    
+    // 3. Lưu vào Redis
+    stories.forEach(s -> storyCacheRepository.save(toStoryCache(s)));
+    
+    return toResponses(stories);
+}
+```
+
+2. **Scheduled Revalidation** (Refresh cache).
+```java
+@Component
+public class StoryJobScheduler {
+    @Scheduled(fixedRate = 3600000) // Every 1 hour
+    public void refreshHotStoriesCache() {
+        List<Story> hotStories = storyRepository.findHotStories();
+        hotStories.forEach(s -> storyCacheRepository.save(toStoryCache(s)));
+    }
+}
+```
+
+3. **Invalidate khi write**:
+```java
+@Transactional
+public StoryResponse updateStory(StoryUpdateRequest req) {
+    Story story = storyRepository.save(updated);
+    
+    // Invalidate cache
+    storyCacheRepository.deleteById(story.getId());
+    
+    return toStoryResponse(story);
+}
+```
+
+**Hiệu suất**:
+- **Trước**: 1 query DB = ~50ms
+- **Sau**: 1 query Redis = ~1-5ms
+
+---
+
+### 🎯 3. RBAC (Role-Based Access Control) + JWT Token Whitelist
+
+**3 vai trò chính**:
+- **Admin**: Quản lý hệ thống, duyệt nội dung
+- **Author**: Đăng truyện/chapter
+- **User**: Đọc và tương tác
+
+**Token Whitelist**:
+- Mỗi token hợp lệ được lưu trong **DisabledToken table**
+- Khi đăng xuất → thêm token vào whitelist
+- Mỗi request kiểm tra token có trong whitelist không
+
+
+## 📡 API Documentation
+
+- **Postman Collection**: [Reading-Request.postman_collection.json](Reading-Request.postman_collection.json)
+- **Base URL**: `http://localhost:8080/api/v1`
+
+---
+
+## III. Tech Stack
+
+### Backend & Devops
+- **Spring Boot 3.3.5**
+- **Spring Data JPA**
+- **Spring Security**
+- **AWS (EC2)**
+- **Docker**
+- **Jenkins**
+### Database & Caching
+- **MySQL 8.0+**
+- **Redis**
+
+
+---
+
+## IV. Core Functionalities
+
+| Tính năng | Đặc điểm |
+|---------|----------|
+| **Tìm kiếm truyện** | Lọc theo tên, thể loại, số chapter, độ hot, rating |
+| **Lịch sử đọc** | Lưu local + lưu DB (phân đoạn theo độ dài) |
+| **Bán item** | Mua khung avatar, items bằng coin, đăng nhập để nhận coin |
+| **Điểm & Level** | Tính dựa trên chapter đọc, có bảng xếp hạng |
+| **Comment phân cấp** | Nested Set Model, support emoji, like/dislike |
+| **Theo dõi truyện** | Follow/unfollow, nhận thông báo chapter mới |
+
+## V. Cài đặt dự án
+
+### 🔧 Yêu cầu môi trường
+
+- **JDK**: 17+ (khuyến nghị: JDK 21)
+- **Maven**: 3.8+ 
 - **MySQL**: 8.0+
-- **Redis**: 6.0+
+- **Redis**: 7.0+ (Local hoặc Docker)
 
-### Bước 1: Clone source
+### 📥 Bước cài đặt
 
+#### 1. Clone repository
 ```bash
-   git clone https://github.com/helloVietTran/reading-story-web-be-java
-   cd reading-story-web-be-java
+git clone https://github.com/helloVietTran/reading-comic.git
+cd reading-comic/backend
 ```
-### Bước 2: Chỉnh sửa cấu hình kết nối với MySQL, Redis cho phù hợp trong file application.yml
 
-### Bước 3: Build & chạy
-
+#### 2. Cài đặt dependencies
 ```bash
-   mvn clean install
-   mvn spring-boot:run
+mvn clean install
 ```
+
+#### 3. Cấu hình kết nối database và API key(application.yml)
+
+#### 4. Chạy ứng dụng
+```bash
+mvn spring-boot:run
+
+```
+
+**Server chạy tại**: `http://localhost:8080/api/v1`
+---
+
+## 6. Project Structure
+
+```
+backend/
+├── src/main/java/com/viettran/reading_story_web/
+│   ├── config/              # Cấu hình Spring (Security, Redis, JPA)
+│   ├── controller/          # REST API endpoints
+│   ├── service/             # Business logic
+│   ├── repository/
+│   │   ├── jpa/            # JPA Repository (MySQL)
+│   │   ├── redis/          # Redis Repository
+│   │   └── httpClient/     # HTTP client cho external API
+│   ├── entity/
+│   │   ├── mysql/          # Entity models (Story, Comment, User...)
+│   │   ├── redis/          # Redis cache models
+│   │   └── base/           # BaseEntity với timestamp
+│   ├── dto/
+│   │   ├── request/        # DTO cho incoming requests
+│   │   └── response/       # DTO cho API responses
+│   ├── mapper/             # MapStruct mappers (DTO ↔ Entity)
+│   ├── exception/          # Exception handling
+│   ├── enums/              # Enum constants
+│   ├── scheduler/          # Scheduled tasks (@Scheduled)
+│   └── utils/              # Utility classes
+│
+├── src/main/resources/
+│   ├── application.yml     # Cấu hình ứng dụng
+│   └── templates/          # Thymeleaf templates (email...)
+│
+├── pom.xml                 # Maven dependencies
+├── Dockerfile              # Docker configuration
+└── README.md               # Tài liệu dự án
+```
+
+

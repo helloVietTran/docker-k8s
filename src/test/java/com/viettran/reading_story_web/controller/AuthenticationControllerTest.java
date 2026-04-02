@@ -1,9 +1,11 @@
 package com.viettran.reading_story_web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viettran.reading_story_web.dto.request.AuthenticationRequest;
-import com.viettran.reading_story_web.dto.response.AuthenticationResponse;
-import com.viettran.reading_story_web.service.AuthenticationService;
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +14,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viettran.reading_story_web.dto.request.AuthenticationRequest;
+import com.viettran.reading_story_web.dto.response.AuthenticationResponse;
+import com.viettran.reading_story_web.service.AuthenticationService;
 
 @WebMvcTest(AuthenticationController.class)
 public class AuthenticationControllerTest {
@@ -53,7 +54,6 @@ public class AuthenticationControllerTest {
                         .with(user("test@example.com").roles("USER")) // filter chain
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1000))
                 .andExpect(jsonPath("$.message").doesNotExist()) // hoặc .isEmpty() nếu bạn set ""
@@ -61,5 +61,4 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.result.refreshToken").value("refresh-token"))
                 .andExpect(jsonPath("$.result.authenticated").value(true));
     }
-
 }

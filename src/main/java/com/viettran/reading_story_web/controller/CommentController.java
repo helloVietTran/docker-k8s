@@ -15,6 +15,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/comments")
 @RequiredArgsConstructor
@@ -46,26 +48,19 @@ public class CommentController {
         return ApiResponse.<String>builder().result("Comment has been deleted").build();
     }
 
-    // call in story detail
     @GetMapping("/stories/{storyId}")
-    ApiResponse<PageResponse<CommentResponse>> getCommentsByStoryId(
-            @PathVariable Integer storyId,
-            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "15") int size) {
-
-        return ApiResponse.<PageResponse<CommentResponse>>builder()
-                .result(commentService.getCommentsByStoryId(storyId, page, size))
+    ApiResponse<List<CommentResponse>> getCommentsByStoryId(@PathVariable Integer storyId) {
+        return ApiResponse.<List<CommentResponse>>builder()
+                .result(commentService.getCommentsTreeByStoryId(storyId))
                 .build();
     }
 
-    // call in chapter detail
     @GetMapping("/chapters/{chapterId}")
-    ApiResponse<PageResponse<CommentResponse>> getCommentsByChapterId(
-            @PathVariable String chapterId,
-            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "15") int size) {
-        return ApiResponse.<PageResponse<CommentResponse>>builder()
-                .result(commentService.getCommentsByChapterId(chapterId, page, size))
+    ApiResponse<List<CommentResponse>> getCommentsByChapterId(
+            @PathVariable String chapterId) {
+
+        return ApiResponse.<List<CommentResponse>>builder()
+                .result(commentService.getCommentsTreeByChapterId(chapterId))
                 .build();
     }
 

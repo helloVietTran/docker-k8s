@@ -2,8 +2,7 @@ package com.viettran.reading_story_web.service;
 
 import java.util.List;
 import java.util.Optional;
-import com.viettran.reading_story_web.repository.jpa.StoryRepository;
-import com.viettran.reading_story_web.repository.jpa.UserRepository;
+
 import org.springframework.stereotype.Service;
 
 import com.viettran.reading_story_web.dto.request.ReadingHistoryRequest;
@@ -16,6 +15,8 @@ import com.viettran.reading_story_web.exception.AppException;
 import com.viettran.reading_story_web.exception.ErrorCode;
 import com.viettran.reading_story_web.mapper.ReadingHistoryMapper;
 import com.viettran.reading_story_web.repository.jpa.ReadingHistoryRepository;
+import com.viettran.reading_story_web.repository.jpa.StoryRepository;
+import com.viettran.reading_story_web.repository.jpa.UserRepository;
 import com.viettran.reading_story_web.utils.DateTimeFormatUtil;
 
 import lombok.AccessLevel;

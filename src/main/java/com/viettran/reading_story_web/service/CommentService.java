@@ -1,16 +1,16 @@
 package com.viettran.reading_story_web.service;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import com.viettran.reading_story_web.repository.jpa.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.viettran.reading_story_web.dto.request.CommentRequest;
 import com.viettran.reading_story_web.dto.request.CommentUpdationRequest;
@@ -23,6 +23,7 @@ import com.viettran.reading_story_web.exception.AppException;
 import com.viettran.reading_story_web.exception.ErrorCode;
 import com.viettran.reading_story_web.mapper.CommentMapper;
 import com.viettran.reading_story_web.mapper.LevelMapper;
+import com.viettran.reading_story_web.repository.jpa.*;
 import com.viettran.reading_story_web.utils.DateTimeFormatUtil;
 
 import lombok.AccessLevel;
@@ -47,6 +48,7 @@ public class CommentService {
     CommentMapper commentMapper;
     LevelMapper levelMapper;
 
+    @Transactional
     public CommentResponse createComment(CommentRequest request) {
         String userId = authenticationService.getCurrentUserId();
         Story story = storyRepository
@@ -57,25 +59,44 @@ public class CommentService {
 
         Chapter chapter = chapterRepository
                 .findByStoryIdAndChap(request.getStoryId(), request.getAtChapter())
-                .orElseThrow(() -> new AppException((ErrorCode.CHAPTER_NOT_EXISTED)));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_EXISTED));
 
         Comment comment = commentMapper.toComment(request);
-        comment.setStory(story);
+
         comment.setUser(user);
+        comment.setStory(story);
         comment.setChapter(chapter);
+
         comment.setCreatedAt(Instant.now());
         comment.setUpdatedAt(Instant.now());
+
+        if (request.getParentCommentId() == null) {
+            int maxRight =
+                    commentRepository.findMaxRightByChapterId(chapter.getId()).orElse(0);
+
+            comment.setLeftVal(maxRight + 1);
+            comment.setRightVal(maxRight + 2);
+
+        } else {
+            Comment parent = commentRepository
+                    .findById(request.getParentCommentId())
+                    .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
+
+            int right = parent.getRightVal();
+
+            commentRepository.shiftRightFrom(chapter.getId(), right);
+            commentRepository.shiftLeftFrom(chapter.getId(), right);
+
+            comment.setLeftVal(right);
+            comment.setRightVal(right + 1);
+        }
 
         story.setCommentCount(story.getCommentCount() + 1);
 
         commentRepository.save(comment);
         storyRepository.save(story);
 
-        CommentResponse commentResponse = commentMapper.toCommentResponse(comment);
-        commentResponse.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
-        commentResponse.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
-
-        return commentResponse;
+        return commentMapper.toCommentResponse(comment);
     }
 
     @PreAuthorize("#id == authentication.name")
@@ -88,22 +109,123 @@ public class CommentService {
         return commentMapper.toCommentResponse(commentRepository.save(commentOptional.get()));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("#id == authentication.name")
+    @Transactional
     public void deleteComment(String commentId) {
-        commentRepository.deleteById(commentId);
+
+        Comment comment = commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
+
+        int left = comment.getLeftVal();
+        int right = comment.getRightVal();
+        int width = right - left + 1;
+
+        String chapterId = comment.getChapter().getId();
+
+        commentRepository.deleteSubtree(chapterId, left, right);
+
+        commentRepository.shiftLeftAfterDelete(chapterId, right, width);
+        commentRepository.shiftRightAfterDelete(chapterId, right, width);
     }
 
-    public PageResponse<CommentResponse> getCommentsByStoryId(int storyId, int page, int size) {
-        Sort sort = Sort.by("createdAt").descending();
-        Pageable pageable = PageRequest.of(page - 1, size, sort);
+    public List<CommentResponse> getCommentsTreeByChapterId(String chapterId) {
 
-        var pageData = commentRepository.findByStoryIdAndParentCommentIdIsNull(storyId, pageable);
+        List<Comment> comments = commentRepository.findAllByChapterOrderByLeft(chapterId);
 
-        List<CommentResponse> commentResponseList = pageData.getContent().stream()
-                .map(this::buildCommentResponseWithReplies)
+        List<String> userIds = comments.stream()
+                .map(c -> c.getUser().getId())
+                .distinct()
                 .toList();
 
-        return buildPageResponse(page, pageData, commentResponseList);
+        List<User> users = userRepository.findUsersWithLevel(userIds);
+        Map<String, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        List<Inventory> inventories = inventoryRepository.findActiveAvatarFrames(userIds);
+
+        Map<String, String> avatarFrameMap = new HashMap<>();
+        for (Inventory inv : inventories) {
+            avatarFrameMap.put(inv.getUser().getId(), inv.getAvatarFrame().getImgSrc());
+        }
+
+        return comments.stream().map(comment -> {
+            CommentResponse res = commentMapper.toCommentResponse(comment);
+
+            res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
+            res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
+
+            res.setLeftVal(comment.getLeftVal());
+            res.setRightVal(comment.getRightVal());
+
+            User user = userMap.get(comment.getUser().getId());
+
+            res.setUser(UserResponse.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .imgSrc(user.getImgSrc())
+                    .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
+                    .level(levelMapper.toLevelResponse(user.getLevel()))
+                    .build());
+
+            return res;
+        }).toList();
+    }
+
+    public List<CommentResponse> getCommentsTreeByStoryId(Integer storyId) {
+
+        List<Comment> comments = commentRepository.findAllByStoryOrderByLeft(storyId);
+
+        List<String> userIds = comments.stream()
+                .map(c -> c.getUser().getId())
+                .distinct()
+                .toList();
+
+        List<User> users = userRepository.findUsersWithLevel(userIds);
+        Map<String, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        List<Inventory> inventories = inventoryRepository.findActiveAvatarFrames(userIds);
+
+        Map<String, String> avatarFrameMap = new HashMap<>();
+        for (Inventory inv : inventories) {
+            avatarFrameMap.put(inv.getUser().getId(), inv.getAvatarFrame().getImgSrc());
+        }
+
+        return comments.stream().map(comment -> {
+            CommentResponse res = commentMapper.toCommentResponse(comment);
+
+            res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
+            res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
+
+            res.setLeftVal(comment.getLeftVal());
+            res.setRightVal(comment.getRightVal());
+
+            User user = userMap.get(comment.getUser().getId());
+
+            res.setUser(UserResponse.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .imgSrc(user.getImgSrc())
+                    .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
+                    .level(levelMapper.toLevelResponse(user.getLevel()))
+                    .build());
+
+            return res;
+        }).toList();
+    }
+
+    // ================= PAGE BUILDER =================
+    private PageResponse<CommentResponse> buildPageResponse(
+            int page, Page<Comment> rootPage, List<CommentResponse> data) {
+
+        return PageResponse.<CommentResponse>builder()
+                .currentPage(page)
+                .pageSize(rootPage.getSize())
+                .totalElements(rootPage.getTotalElements()) // chỉ count root
+                .totalPages(rootPage.getTotalPages())
+                .data(data)
+                .build();
     }
 
     public PageResponse<CommentResponse> getNewComments() {
@@ -145,21 +267,6 @@ public class CommentService {
                 .build();
     }
 
-    public PageResponse<CommentResponse> getCommentsByChapterId(String chapterId, int page, int size) {
-        Sort sort = Sort.by("createdAt").descending();
-        Pageable pageable = PageRequest.of(page - 1, size, sort);
-
-        // Lấy danh sách comment gốc (parentCommentId = null)
-        var pageData = commentRepository.findByChapterIdAndParentCommentIdIsNull(chapterId, pageable);
-
-        // Chuyển đổi dữ liệu sang CommentResponse và xử lý replies
-        List<CommentResponse> commentResponseList = pageData.getContent().stream()
-                .map(this::buildCommentResponseWithReplies)
-                .toList();
-
-        return buildPageResponse(page, pageData, commentResponseList);
-    }
-
     public PageResponse<CommentResponse> getMyComment() {
         String userId = authenticationService.getCurrentUserId();
 
@@ -187,53 +294,6 @@ public class CommentService {
                 .build();
     }
 
-    private CommentResponse buildCommentResponseWithReplies(Comment comment) {
-        CommentResponse response = buildCommentResponse(comment);
-        List<Comment> replies = commentRepository.findByParentCommentId(comment.getId());
-
-        // Nếu có replies, thì map sang CommentResponse
-        if (!replies.isEmpty()) {
-            List<CommentResponse> replyResponses =
-                    replies.stream().map(this::buildCommentResponse).toList();
-            response.setReplies(replyResponses);
-        }
-
-        return response;
-    }
-
-    private CommentResponse buildCommentResponse(Comment comment) {
-        CommentResponse response = commentMapper.toCommentResponse(comment);
-        response.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
-        response.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
-
-        // Lấy thông tin frame của người dùng
-        String frame = inventoryRepository
-                .findFirstByUserIdAndExpirationDateAfter(comment.getUser().getId(), Instant.now())
-                .map(inventory -> inventory.getAvatarFrame().getImgSrc())
-                .orElse("");
-
-        // Thiết lập thông tin người dùng
-        response.setUser(UserResponse.builder()
-                .imgSrc(comment.getUser().getImgSrc())
-                .name(comment.getUser().getName())
-                .id(comment.getUser().getId())
-                .frame(frame)
-                .level(levelMapper.toLevelResponse(comment.getUser().getLevel()))
-                .build());
-
-        return response;
-    }
-
-    private PageResponse<CommentResponse> buildPageResponse(
-            int page, Page<Comment> pageData, List<CommentResponse> content) {
-        return PageResponse.<CommentResponse>builder()
-                .currentPage(page)
-                .pageSize(pageData.getSize())
-                .totalElements(pageData.getTotalElements())
-                .totalPages(pageData.getTotalPages())
-                .data(content)
-                .build();
-    }
 
     public PageResponse<CommentResponse> getCommentsByUserId(String userId, int page, int size) {
         Sort sort = Sort.by("createdAt").descending();
@@ -243,7 +303,7 @@ public class CommentService {
 
         List<CommentResponse> commentResponses = pageData.getContent().stream()
                 .map(comment -> {
-                    CommentResponse commentResponse = buildCommentResponse(comment);
+                    CommentResponse commentResponse = commentMapper.toCommentResponse(comment);
 
                     commentResponse.setStory(StoryResponse.builder()
                             .name(comment.getStory().getName())

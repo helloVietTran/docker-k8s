@@ -1,7 +1,5 @@
 package com.viettran.reading_story_web.dto.response;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.*;
@@ -27,8 +25,6 @@ public class CommentResponse {
     UserResponse user;
     StoryResponse story;
 
-    // chứa các comment con
-    List<CommentResponse> replies;
-
-    String parentCommentId;
+    int rightVal = 0;
+    int leftVal = 0;
 }

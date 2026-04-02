@@ -29,9 +29,5 @@ public class StoryCache implements Serializable {
     String slug;
     Long likeCount;
     boolean hot;
+    int newestChapter;
 }
-// Key: StoryCache:1
-// Type: Hash
-// Fields:
-//  id            -> "1"
-//  name          -> "Harry Potter"
