@@ -6,10 +6,14 @@
 
 Hệ thống đọc truyện được thực hiện để đáp ứng nhu cầu giải trí người dùng.
 
-Hệ thống được thiết kế đảm bảo khả năng phục vụ lưu lượng truy cập lớn (read-heavy) với tốc độ nhanh, ổn định và độ trễ thấp.
+Hệ thống được thiết kế theo kiến trúc đảm bảo khả năng phục vụ lưu lượng truy cập đọc lớn (read-heavy)
 
 
-## 🔥 II. Mô tả một số bài toán nổi bật đã xử lý
+## II Mô tả kiến trúc tổng quan
+
+<img src="./demo/architecture.png" width="500"/>
+
+## III. Mô tả một số bài toán đã xử lý
 
 ### 1. Xác thực và phân quyền người dùng (RBAC + Token Whitelist)
 
@@ -49,7 +53,7 @@ Giải pháp này giúp:
 
 ---
 
-### 3. Bài toán phân phối nội dung theo chiến lược Explore – Exploit
+### 3.Phân phối nội dung theo chiến lược Explore – Exploit
 
 Hệ thống triển khai bài toán **đề xuất truyện theo chiến lược Explore – Exploit** nhằm cân bằng giữa việc **giữ chân người dùng** và **tăng khả năng khám phá nội dung mới**.
 
@@ -57,11 +61,9 @@ Giải pháp tập trung vào việc **phân phối xen kẽ** giữa:
 - **Exploit**: các truyện đang có hiệu suất cao (top view, trending, nhiều tương tác) được ưu tiên để đảm bảo trải nhiệm ổn định
 - **Explore**: các truyện mới hoặc ít lượt xem sẽ được phân phối thêm với tỷ lệ hợp lý để tăng tính khám phá
 
-
 ---
 
-
-## III. Công nghệ sử dụng
+## IV. Công nghệ sử dụng
 
 **Frontend:** React.js, TaiwindCSS, Redux Toolkit, React Query
 
@@ -71,7 +73,7 @@ Giải pháp tập trung vào việc **phân phối xen kẽ** giữa:
 
 **Tools:** Docker
 
-## IV. Một số hình ảnh demo dự án
+## V. Một số hình ảnh demo dự án
 
 <table>
   <tr>
@@ -107,7 +109,7 @@ Giải pháp tập trung vào việc **phân phối xen kẽ** giữa:
   </tr>
 </table>
 
-## ⚙️ V. Hướng dẫn cài đặt
+## ⚙️ VI. Hướng dẫn cài đặt
 
 ### Yêu cầu hệ thống
 - Docker 4.55.0
