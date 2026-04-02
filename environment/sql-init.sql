@@ -1,3 +1,5 @@
+--  config data -- 
+
 INSERT INTO genre (genre_name, description, code)
 VALUES ('Action', 'Thể loại hành động, đánh nhau, chiến đấu', 1);
 

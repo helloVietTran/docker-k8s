@@ -1,15 +1,13 @@
-# Website đọc truyện online
+# Hệ thống đọc truyện online
 
 > **Đồ án tốt nghiệp** - Thành viên thực hiện: Trần Việt Anh
 
 ## 📚 I. Giới thiệu
-Dự án website đọc truyện sinh ra để đáp ứng nhu cầu giải trí ngày càng tăng của người dùng. Dự án được thiết kế theo kiến trúc master-slave, sử dụng nginx làm load balancer và pg pool làm SQL balancer
 
-Dự án được xây dựng đáp ứng các chức năng cốt lõi với kiến trúc cho phép scale khi số lượng người đọc tăng cao.
+Hệ thống đọc truyện được thực hiện để đáp ứng nhu cầu giải trí người dùng.
 
-1. 📝 Tài liệu đặc tả và trình bày solution: [Docs here](https://docs.google.com/spreadsheets/d/1rAm5o3OZ-tzAVuw5nkkkmWQYOj4ntg29-iN0OXCSagA/edit?gid=0#gid=0)
+Hệ thống được thiết kế đảm bảo khả năng phục vụ lưu lượng truy cập lớn (read-heavy) với tốc độ nhanh, ổn định và độ trễ thấp.
 
-2. 📝 Tài liệu thiết kế hệ thống: [Docs here](https://docs.google.com/spreadsheets/d/13syJTJZKzJfNnn7L2Mt_TXI5rLFMfkJUXQjZLTbDqqU/edit?gid=0#gid=0)
 
 ## 🔥 II. Mô tả một số bài toán nổi bật đã xử lý
 
@@ -65,17 +63,9 @@ Giải pháp tập trung vào việc **phân phối xen kẽ** giữa:
 
 ## III. Công nghệ sử dụng
 
-**Frontend:** React.js, TaiwindCSS, Shacdn UI, Redux Toolkit, React Query
+**Frontend:** React.js, TaiwindCSS, Redux Toolkit, React Query
 
-**Backend:**
-
-1. Service xử lý nghiệp vụ chính: Spring Boot, Spring Security, Spring Data, Spring Thymeleaf
-
-2. Service phụ trợ (Notification): Node.js, Express.js
-
-3. Tool phụ trợ (Crawl dữ liệu, xử lý bài toán explore-exploit, hệ thống gợi ý): 
-
-**Design Pattern:** Singleton, Builder Pattern
+**Backend:**  Spring Boot, Spring Security, Spring Data JPA, Kafka
 
 **Database:** PostgreSQL, MongoDB, Redis
 
@@ -123,16 +113,14 @@ Giải pháp tập trung vào việc **phân phối xen kẽ** giữa:
 - Docker 4.55.0
 - Java JDK 17+
 - Maven 3.7+
-- Node.js v22+
-  
+
 ### Các bước chạy dự án
 1. **Clone dự án:**
 ```
-   git clone https://github.com/helloVietTran/graduate-project
+   git clone https://github.com/helloVietTran/reading-comic-system
 ```
 2. **Thiết lập môi trường phát triển:**
 ```
-   cd graduate-project
    cd environment
    docker compose up -d
 ```
