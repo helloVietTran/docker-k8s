@@ -1,5 +1,7 @@
 package com.viettran.reading_story_web.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +16,6 @@ import com.viettran.reading_story_web.service.CommentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/comments")
@@ -56,8 +56,7 @@ public class CommentController {
     }
 
     @GetMapping("/chapters/{chapterId}")
-    ApiResponse<List<CommentResponse>> getCommentsByChapterId(
-            @PathVariable String chapterId) {
+    ApiResponse<List<CommentResponse>> getCommentsByChapterId(@PathVariable String chapterId) {
 
         return ApiResponse.<List<CommentResponse>>builder()
                 .result(commentService.getCommentsTreeByChapterId(chapterId))

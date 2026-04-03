@@ -133,14 +133,11 @@ public class CommentService {
 
         List<Comment> comments = commentRepository.findAllByChapterOrderByLeft(chapterId);
 
-        List<String> userIds = comments.stream()
-                .map(c -> c.getUser().getId())
-                .distinct()
-                .toList();
+        List<String> userIds =
+                comments.stream().map(c -> c.getUser().getId()).distinct().toList();
 
         List<User> users = userRepository.findUsersWithLevel(userIds);
-        Map<String, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getId, u -> u));
 
         List<Inventory> inventories = inventoryRepository.findActiveAvatarFrames(userIds);
 
@@ -149,41 +146,40 @@ public class CommentService {
             avatarFrameMap.put(inv.getUser().getId(), inv.getAvatarFrame().getImgSrc());
         }
 
-        return comments.stream().map(comment -> {
-            CommentResponse res = commentMapper.toCommentResponse(comment);
+        return comments.stream()
+                .map(comment -> {
+                    CommentResponse res = commentMapper.toCommentResponse(comment);
 
-            res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
-            res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
+                    res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
+                    res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
 
-            res.setLeftVal(comment.getLeftVal());
-            res.setRightVal(comment.getRightVal());
+                    res.setLeftVal(comment.getLeftVal());
+                    res.setRightVal(comment.getRightVal());
 
-            User user = userMap.get(comment.getUser().getId());
+                    User user = userMap.get(comment.getUser().getId());
 
-            res.setUser(UserResponse.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .imgSrc(user.getImgSrc())
-                    .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
-                    .level(levelMapper.toLevelResponse(user.getLevel()))
-                    .build());
+                    res.setUser(UserResponse.builder()
+                            .id(user.getId())
+                            .name(user.getName())
+                            .imgSrc(user.getImgSrc())
+                            .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
+                            .level(levelMapper.toLevelResponse(user.getLevel()))
+                            .build());
 
-            return res;
-        }).toList();
+                    return res;
+                })
+                .toList();
     }
 
     public List<CommentResponse> getCommentsTreeByStoryId(Integer storyId) {
 
         List<Comment> comments = commentRepository.findAllByStoryOrderByLeft(storyId);
 
-        List<String> userIds = comments.stream()
-                .map(c -> c.getUser().getId())
-                .distinct()
-                .toList();
+        List<String> userIds =
+                comments.stream().map(c -> c.getUser().getId()).distinct().toList();
 
         List<User> users = userRepository.findUsersWithLevel(userIds);
-        Map<String, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getId, u -> u));
 
         List<Inventory> inventories = inventoryRepository.findActiveAvatarFrames(userIds);
 
@@ -192,27 +188,29 @@ public class CommentService {
             avatarFrameMap.put(inv.getUser().getId(), inv.getAvatarFrame().getImgSrc());
         }
 
-        return comments.stream().map(comment -> {
-            CommentResponse res = commentMapper.toCommentResponse(comment);
+        return comments.stream()
+                .map(comment -> {
+                    CommentResponse res = commentMapper.toCommentResponse(comment);
 
-            res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
-            res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
+                    res.setCreatedAt(dateTimeFormatUtil.format(comment.getCreatedAt()));
+                    res.setUpdatedAt(dateTimeFormatUtil.format(comment.getUpdatedAt()));
 
-            res.setLeftVal(comment.getLeftVal());
-            res.setRightVal(comment.getRightVal());
+                    res.setLeftVal(comment.getLeftVal());
+                    res.setRightVal(comment.getRightVal());
 
-            User user = userMap.get(comment.getUser().getId());
+                    User user = userMap.get(comment.getUser().getId());
 
-            res.setUser(UserResponse.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .imgSrc(user.getImgSrc())
-                    .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
-                    .level(levelMapper.toLevelResponse(user.getLevel()))
-                    .build());
+                    res.setUser(UserResponse.builder()
+                            .id(user.getId())
+                            .name(user.getName())
+                            .imgSrc(user.getImgSrc())
+                            .frame(avatarFrameMap.getOrDefault(user.getId(), ""))
+                            .level(levelMapper.toLevelResponse(user.getLevel()))
+                            .build());
 
-            return res;
-        }).toList();
+                    return res;
+                })
+                .toList();
     }
 
     // ================= PAGE BUILDER =================
@@ -293,7 +291,6 @@ public class CommentService {
                         .toList())
                 .build();
     }
-
 
     public PageResponse<CommentResponse> getCommentsByUserId(String userId, int page, int size) {
         Sort sort = Sort.by("createdAt").descending();

@@ -15,7 +15,24 @@
 - **Hệ thống shop** và **xếp hạng người dùng** theo điểm & level
 - **Quản lý tệp hình ảnh** trên cloud (Cloudinary)
 
-## II. Problem Solutions
+
+## II. Tech Stack
+
+### Backend
+- **Spring Boot 3**
+- **Spring Data JPA**
+- **Spring Security**
+
+### Devops & Tool
+- **Nginx**
+- **AWS (EC2, S3)**
+- **Docker**
+
+### Database & Caching
+- **MySQL 8.0+**
+- **Redis**
+
+## III. Problem Solutions
 
 ### 🎯 1. Nested Set Model – Comment System (Read-Heavy Optimization)
 
@@ -166,19 +183,6 @@ public StoryResponse updateStory(StoryUpdateRequest req) {
 - **Base URL**: `http://localhost:8080/api/v1`
 
 ---
-
-## III. Tech Stack
-
-### Backend & Devops
-- **Spring Boot 3.3.5**
-- **Spring Data JPA**
-- **Spring Security**
-- **AWS (EC2)**
-- **Docker**
-- **Jenkins**
-### Database & Caching
-- **MySQL 8.0+**
-- **Redis**
 
 
 ---

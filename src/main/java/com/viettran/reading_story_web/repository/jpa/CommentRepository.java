@@ -17,20 +17,19 @@ import feign.Param;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, String> {
 
-	@Query("""
+    @Query("""
 		SELECT c FROM Comment c
 		WHERE c.story.id = :storyId
 		ORDER BY c.leftVal
 	""")
-	List<Comment> findAllByStoryOrderByLeft(Integer storyId);
+    List<Comment> findAllByStoryOrderByLeft(Integer storyId);
 
-	@Query("""
+    @Query("""
 		SELECT c FROM Comment c
 		WHERE c.atChapter= :chapterId
 		ORDER BY c.leftVal
 	""")
-	List<Comment> findAllByChapterOrderByLeft(String chapterId);
-
+    List<Comment> findAllByChapterOrderByLeft(String chapterId);
 
     // ================= NESTED SET INSERT =================
 
