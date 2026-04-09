@@ -1,0 +1,43 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    url: ${MYSQLURL:jdbc:mysql://localhost:3306/reading_story_web_db}
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${MYSQLUSER:root}
+    password: ${MYSQLPASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    
+  redis:
+    host: ${REDISHOST:localhost}
+    port: ${REDISPORT:6379}
+#    password: ${REDISPASSWORD:}
+#    username: ${REDISUSER:}
+    timeout: 10000
+
+app:
+  brevo:
+    apikey: ${BREVO_API_KEY:<your-api-key>}
+    url: https://api.brevo.com
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUDNAME:<your-cloud-name>}
+    api-key: ${CLOUDINARY_API_KEY:<your-api-key>}
+    api-secret: ${CLOUDINARY_API_SECRET:<your-api-secret>}
+  jwt:
+    secretKey: ${JWT_SECRETKEY:<your-jwt-secret>}
+    access-duration: 3600 # in seconds
+    refreshable-duration: 36000
+  folder:
+    avatar: "avatar_folder"
+    chapter: "chapter_folder"
+    story: "story_folder"
+    avatar-frame: "avatar_frame_folder"
+  admin-email: ${ADMIN_EMAIL:numberzero0909@gmail.com}
+  frontend:
+    url: ${FRONTEND_URL:<your-fe-url>}
