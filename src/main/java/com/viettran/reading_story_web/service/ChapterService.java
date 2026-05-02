@@ -29,7 +29,6 @@ import com.viettran.reading_story_web.mapper.ImageMapper;
 import com.viettran.reading_story_web.repository.jpa.ChapterRepository;
 import com.viettran.reading_story_web.repository.jpa.ImageRepository;
 import com.viettran.reading_story_web.repository.jpa.StoryRepository;
-import com.viettran.reading_story_web.scheduler.ChapterJobScheduler;
 import com.viettran.reading_story_web.utils.DateTimeFormatUtil;
 
 import lombok.AccessLevel;
@@ -55,7 +54,6 @@ public class ChapterService {
 
     FileService fileService;
 
-    ChapterJobScheduler chapterJobScheduler;
     DateTimeFormatUtil dateTimeFormatUtil;
 
     @NonFinal

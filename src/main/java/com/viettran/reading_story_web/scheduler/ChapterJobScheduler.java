@@ -6,13 +6,16 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.viettran.reading_story_web.annotation.RedisDistributedLock;
 import com.viettran.reading_story_web.entity.mysql.Chapter;
 import com.viettran.reading_story_web.repository.jpa.ChapterRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -21,7 +24,9 @@ public class ChapterJobScheduler {
     StringRedisTemplate stringRedisTemplate;
 
     @Scheduled(cron = "0 */5 * * * ?")
+    @RedisDistributedLock(key = "job:chapter:sync:views", timeout = 300)
     public void syncAndResetChapterViews() {
+        log.info("[ChapterJobScheduler] Syncing and resetting chapter views...");
         Set<String> keys = stringRedisTemplate.keys("chapter::*");
 
         if (keys != null) {
@@ -50,6 +55,7 @@ public class ChapterJobScheduler {
         if (chapter != null) {
             chapter.setViewCount(viewCount);
             chapterRepository.save(chapter);
+            log.debug("[ChapterJobScheduler] Updated chapter {} views to {}", chapterId, viewCount);
         }
     }
 }

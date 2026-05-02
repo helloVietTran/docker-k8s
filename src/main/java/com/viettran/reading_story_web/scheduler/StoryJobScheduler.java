@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.viettran.reading_story_web.annotation.RedisDistributedLock;
 import com.viettran.reading_story_web.entity.mysql.Story;
 import com.viettran.reading_story_web.repository.jpa.StoryRepository;
 
@@ -26,7 +27,9 @@ public class StoryJobScheduler {
     StringRedisTemplate stringRedisTemplate;
 
     @Scheduled(cron = "0 */5 * * * ?")
+    @RedisDistributedLock(key = "job:story:sync:views", timeout = 300)
     public void syncAndResetStoryViews() {
+        log.info("[StoryJobScheduler] Syncing and resetting story views...");
         Set<String> keys = stringRedisTemplate.keys("story::*");
 
         if (keys != null) {
@@ -55,7 +58,9 @@ public class StoryJobScheduler {
 
     // chạy vào 1h sáng 0 phút 30 giây
     @Scheduled(cron = "30 0 1 * * ?")
+    @RedisDistributedLock(key = "job:story:update:hot", timeout = 600)
     public void updateHotStory() {
+        log.info("[StoryJobScheduler] Updating hot stories...");
         List<Story> stories = storyRepository.findByViewCountGreaterThanAndHotFalse(20);
 
         if (!stories.isEmpty()) {
@@ -63,6 +68,9 @@ public class StoryJobScheduler {
                 story.setHot(true); // Cập nhật trường hot thành true
             }
             storyRepository.saveAll(stories);
+            log.info("[StoryJobScheduler] Updated {} stories to hot status", stories.size());
+        } else {
+            log.debug("[StoryJobScheduler] No stories to update to hot status");
         }
     }
 
@@ -73,6 +81,7 @@ public class StoryJobScheduler {
         if (story != null) {
             story.setViewCount(story.getViewCount() + viewCount);
             storyRepository.save(story);
+            log.debug("[StoryJobScheduler] Updated story {} views count by {}", storyId, viewCount);
         }
     }
 }
