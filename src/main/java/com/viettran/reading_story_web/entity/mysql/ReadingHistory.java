@@ -37,7 +37,7 @@ public class ReadingHistory extends BaseEntity {
     Story story;
 
     @Convert(converter = ListToJsonConverterUtil.class)
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "jsonb")
     @Builder.Default
     List<String> chaptersRead = new ArrayList<>(); // Lưu dưới dạng ["1", "2", "3"]
 }
