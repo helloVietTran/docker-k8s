@@ -11,8 +11,10 @@
         - POSTGRESURL=jdbc:postgresql://pgpool:5432/app_db
         - POSTGRESUSER=app_user
         - POSTGRESPASSWORD=app_password
-        - REDIS_HOST=redis
-        - REDISPORT=6379
+
+        - SPRING_REDIS_HOST=redis
+        - SPRING_REDIS_PORT=6379
+
         - PORT=8080
         - FRONTEND_URL=http://localhost:3000
       networks:
@@ -29,6 +31,7 @@
         - "host.docker.internal:host-gateway"
       networks:
         - frontend
+        
     redis:
       image: redis:6.2
       container_name: redis

@@ -23,7 +23,7 @@ public class ChapterJobScheduler {
     ChapterRepository chapterRepository;
     StringRedisTemplate stringRedisTemplate;
 
-    @Scheduled(cron = "0 */5 * * * ?")
+    @Scheduled(cron = "0 */1 * * * ?")
     @RedisDistributedLock(key = "job:chapter:sync:views", timeout = 300)
     public void syncAndResetChapterViews() {
         log.info("[ChapterJobScheduler] Syncing and resetting chapter views...");

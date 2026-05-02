@@ -5,32 +5,39 @@ server:
 
 spring:
   datasource:
-    url: ${MYSQLURL:jdbc:mysql://localhost:3306/reading_story_web_db}
-    driverClassName: com.mysql.cj.jdbc.Driver
-    username: ${MYSQLUSER:root}
-    password: ${MYSQLPASSWORD:root}
+    url: ${POSTGRESURL:jdbc:postgresql://localhost:5432/app_db?prepareThreshold=0}
+    driverClassName: org.postgresql.Driver
+    username: ${POSTGRESUSER:app_user}
+    password: ${POSTGRESPASSWORD:app_password}
+  
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
-    
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
   redis:
-    host: ${REDISHOST:localhost}
-    port: ${REDISPORT:6379}
-#    password: ${REDISPASSWORD:}
-#    username: ${REDISUSER:}
+    host: ${SPRING_REDIS_HOST:localhost}
+    port: ${SPRING_REDIS_PORT:6379}
     timeout: 10000
+    lettuce:
+      pool:
+        max-active: 4
+        max-idle: 4
+        min-idle: 0
+        timeout: 2000ms
+    connect-timeout: 2000ms
 
 app:
   brevo:
-    apikey: ${BREVO_API_KEY:<your-api-key>}
+    apikey: <your-api-key>
     url: https://api.brevo.com
   cloudinary:
-    cloud-name: ${CLOUDINARY_CLOUDNAME:<your-cloud-name>}
-    api-key: ${CLOUDINARY_API_KEY:<your-api-key>}
-    api-secret: ${CLOUDINARY_API_SECRET:<your-api-secret>}
+    cloud-name: <your-cloud-name>
+    api-key: <your-api-key>
+    api-secret: <your-api-secret>
   jwt:
-    secretKey: ${JWT_SECRETKEY:<your-jwt-secret>}
+    secretKey: <your-secret-key>
     access-duration: 3600 # in seconds
     refreshable-duration: 36000
   folder:
@@ -38,6 +45,6 @@ app:
     chapter: "chapter_folder"
     story: "story_folder"
     avatar-frame: "avatar_frame_folder"
-  admin-email: ${ADMIN_EMAIL:numberzero0909@gmail.com}
+  admin-email: <your-admin-email>
   frontend:
-    url: ${FRONTEND_URL:<your-fe-url>}
+    url: ${FRONTEND_URL:http://localhost:3000}
