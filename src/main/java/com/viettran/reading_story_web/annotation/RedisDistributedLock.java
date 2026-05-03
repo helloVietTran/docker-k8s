@@ -8,14 +8,14 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RedisDistributedLock {
-	/**
-	 * Khóa lock trong Redis
-	 * Convention: "job:{job-name}:{action}"
-	 */
-	String key();
+    /**
+     * Khóa lock trong Redis
+     * Convention: "job:{job-name}:{action}"
+     */
+    String key();
 
-	/**
-	 * Thời gian lock tồn tại (tính bằng giây)
-	 */
-	long timeout() default 300;
+    /**
+     * Thời gian lock tồn tại (tính bằng giây)
+     */
+    long timeout() default 300;
 }

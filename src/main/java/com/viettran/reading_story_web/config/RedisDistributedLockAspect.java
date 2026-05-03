@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Aspect để intercept methods annotated với @RedisDistributedLock
  * Tự động acquire lock trước khi chạy method, release lock sau khi xong
  */
 @Slf4j
@@ -20,41 +19,33 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class RedisDistributedLockAspect {
-	private final RedisLockService redisLockService;
+    private final RedisLockService redisLockService;
 
-	/**
-	 * Intercept method có @RedisDistributedLock annotation
-	 * Nếu không lấy được lock, skip method execution
-	 */
-	@Around("@annotation(lock)")
-	public Object aroundRedisDistributedLock(ProceedingJoinPoint joinPoint,
-		RedisDistributedLock lock) throws Throwable {
+    @Around("@annotation(lock)")
+    public Object aroundRedisDistributedLock(ProceedingJoinPoint joinPoint, RedisDistributedLock lock)
+            throws Throwable {
 
-		String methodName = joinPoint.getSignature().getName();
-		String lockKey = lock.key();
-		long timeout = lock.timeout();
+        String methodName = joinPoint.getSignature().getName();
+        String lockKey = lock.key();
+        long timeout = lock.timeout();
 
-		log.info("🔒 Attempting to acquire lock: {} for method: {}", lockKey, methodName);
+        String lockValue = redisLockService.tryAcquireLock(lockKey, timeout);
 
-		String lockValue = redisLockService.tryAcquireLock(lockKey, timeout);
+        if (lockValue == null) {
+            // Lock đã bị chiếm, skip execution
+            log.warn("⏭️  Lock not acquired, skipping execution of: {} (another instance is running)", methodName);
+            return null;
+        }
 
-		if (lockValue == null) {
-			// Lock đã bị chiếm, skip execution
-			log.warn("⏭️  Lock not acquired, skipping execution of: {} (another instance is running)", methodName);
-			return null;
-		}
-
-		try {
-			// Lock acquired, execute method
-			log.info("▶️  Executing method: {} with lock: {}", methodName, lockKey);
-			return joinPoint.proceed();
-		} catch (Exception e) {
-			log.error("❌ Error executing method: {} with lock: {}", methodName, lockKey, e);
-			throw e;
-		} finally {
-			// Always release lock
-			redisLockService.releaseLock(lockKey, lockValue);
-			log.info("🔓 Lock released: {}", lockKey);
-		}
-	}
+        try {
+            // Lock acquired, execute method
+            log.info("▶️  Executing method: {} with lock: {}", methodName, lockKey);
+            return joinPoint.proceed();
+        } catch (Exception e) {
+            log.error("Error executing method: {} with lock: {}", methodName, lockKey, e);
+            throw e;
+        } finally {
+            redisLockService.releaseLock(lockKey, lockValue);
+        }
+    }
 }
