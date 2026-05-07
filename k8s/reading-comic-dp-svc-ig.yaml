@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: reading-comic-backend
+  name: reading-comic-backend-deployment
+  namespace: reading-comic
+spec:
+  replicas: 1
+  revisionHistoryLimit: 11
+  selector:
+    matchLabels:
+      app: reading-comic-backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: reading-comic-backend
+      namespace: reading-comic
+    spec:
+      containers:
+        - envFrom:
+          - secretRef:
+              name: reading-comic-db-secret
+              optional: false
+          - secretRef:
+              name: reading-comic-api-secret
+              optional: false
+          image: trandanhviet192003040/reading-comic:v2.0.1
+          imagePullPolicy: Always
+          name: reading-comic-backend
+          ports:
+            - containerPort: 8080
+              name: tcp
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /data/config/application.yml
+              name: reading-comic-backend-application-properties-config-volume
+              subPath: application.yml # tên key trong configmap
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: reading-comic-backend-config-map
+          name: reading-comic-backend-application-properties-config-volume
+     
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reading-comic-backend-service
+  namespace: reading-comic
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: reading-comic-backend
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reading-comic-backend-ingress
+  namespace: reading-comic
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api-reading-comic.vn
+      http:
+        paths:
+          - backend:
+              service:
+                name: reading-comic-backend-service
+                port:
+                  number: 8080
+            path: /
+            pathType: Prefix
+
+
+
+
