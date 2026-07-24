@@ -43,7 +43,7 @@ services:
       - backend
 
   pgpool:
-    image: bitnamilegacy/pgpool:4.6.3
+    image: soldevelo/pgpool:4.6.3
     container_name: pgpool
     depends_on:
       - postgresql-master
