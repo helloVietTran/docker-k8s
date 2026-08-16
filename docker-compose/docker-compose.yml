@@ -1,0 +1,160 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+
+    depends_on:
+      - redis
+      - pgpool
+    environment:
+      - POSTGRESURL=jdbc:postgresql://pgpool:5432/app_db
+      - POSTGRESUSER=app_user
+      - POSTGRESPASSWORD=app_password
+
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+
+      - PORT=8080
+      - FRONTEND_URL=http://localhost:3000
+    networks:
+      - frontend
+      - backend
+
+  load_balancer:
+    image: nginx:stable-perl
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - frontend
+      
+  redis:
+    image: redis:6.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  pgpool:
+    image: bitnamilegacy/pgpool:4.6.3
+    container_name: pgpool
+    depends_on:
+      - postgresql-master
+      - postgresql-slave1
+      - postgresql-slave2
+    ports:
+      - "5432:5432"
+    environment:
+      - PGPOOL_BACKEND_NODES=0:postgresql-master:5432,1:postgresql-slave1:5432,2:postgresql-slave2:5432
+      - PGPOOL_SR_CHECK_PERIOD=10
+      - PGPOOL_SR_CHECK_USER=repmgr
+      - PGPOOL_SR_CHECK_PASSWORD=repmgrpass
+
+      - PGPOOL_POSTGRES_USERNAME=app_user
+      - PGPOOL_POSTGRES_PASSWORD=app_password
+
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=admin_password
+
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_ENABLE_STATEMENT_LOAD_BALANCING=yes
+
+      - PGPOOL_ENABLE_FAILOVER=yes
+      - PGPOOL_FAILOVER_ON_BACKEND_ERROR=yes
+
+      - PGPOOL_HEALTH_CHECK_PERIOD=5
+      - PGPOOL_HEALTH_CHECK_USER=repmgr
+      - PGPOOL_HEALTH_CHECK_PASSWORD=repmgrpass
+    networks:
+      - backend
+  
+  postgresql-master:
+    image: bitnamilegacy/postgresql-repmgr@sha256:f12387ec882ba42383bbeccfe56d1e9b7671bfbb10795426de4acf2ae800f314
+    container_name: pg-master
+    environment:
+      - REPMGR_NODE_ID=1
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=postgresql-master
+
+      - REPMGR_PRIMARY_HOST=postgresql-master
+      - REPMGR_PARTNER_NODES=postgresql-master,postgresql-slave1,postgresql-slave2
+
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_DATABASE=repmgr
+
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=app_user
+      - POSTGRESQL_PASSWORD=app_password
+      - POSTGRESQL_DATABASE=app_db
+    volumes:
+      - pg_master_data:/bitnami/postgresql
+    networks:
+      - backend
+
+  postgresql-slave1:
+    image: bitnamilegacy/postgresql-repmgr@sha256:f12387ec882ba42383bbeccfe56d1e9b7671bfbb10795426de4acf2ae800f314
+    container_name: pg-slave1
+    depends_on:
+      - postgresql-master
+    environment:
+      - REPMGR_NODE_ID=2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=postgresql-slave1
+
+      - REPMGR_PRIMARY_HOST=postgresql-master
+      - REPMGR_PARTNER_NODES=postgresql-master,postgresql-slave1,postgresql-slave2
+
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_DATABASE=repmgr
+
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_PASSWORD=app_password
+    volumes:
+      - pg_slave1_data:/bitnami/postgresql
+    networks:
+      - backend
+
+  postgresql-slave2:
+    image: bitnamilegacy/postgresql-repmgr@sha256:f12387ec882ba42383bbeccfe56d1e9b7671bfbb10795426de4acf2ae800f314
+    container_name: pg-slave2
+    depends_on:
+      - postgresql-master
+    environment:
+      - REPMGR_NODE_ID=3
+      - REPMGR_NODE_NAME=pg-3
+      - REPMGR_NODE_NETWORK_NAME=postgresql-slave2
+
+      - REPMGR_PRIMARY_HOST=postgresql-master
+      - REPMGR_PARTNER_NODES=postgresql-master,postgresql-slave1,postgresql-slave2
+
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpass
+      - REPMGR_DATABASE=repmgr
+
+      - POSTGRESQL_POSTGRES_PASSWORD=postgres
+      - POSTGRESQL_PASSWORD=app_password
+    volumes:
+      - pg_slave2_data:/bitnami/postgresql
+    networks:
+      - backend
+
+volumes:
+  pg_master_data:
+  pg_slave1_data:
+  pg_slave2_data:
+  redis_data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge

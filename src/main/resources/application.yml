@@ -1,0 +1,81 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/app_db?prepareThreshold=0}
+    driverClassName: org.postgresql.Driver
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      cluster:
+        nodes:
+          - ${REDIS_HOST:localhost}:${REDIS_PORT:6379}
+      ssl:
+        enabled: true
+      timeout: 10000
+      lettuce:
+        pool:
+          max-active: 4
+          max-idle: 4
+          min-idle: 0
+          timeout: 60s
+      connect-timeout: 60s
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    ssl:
+      enabled: true
+    timeout: 10000
+    lettuce:
+      pool:
+        max-active: 4
+        max-idle: 4
+        min-idle: 0
+        timeout: 60s
+    connect-timeout: 60s
+
+management:
+  health:
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  version: v1.0.0
+  brevo:
+    apikey: ${BREVO_API_KEY}
+    url: https://api.brevo.com
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME:vcomic-storage}
+    region: ${AWS_REGION:ap-southeast-1}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+  jwt:
+    secretKey: ${JWT_SECRET_KEY}
+    access-duration: 3600 # in seconds
+    refreshable-duration: 36000
+  folder:
+    avatar: "avatar_folder"
+    chapter: "chapter_folder"
+    story: "story_folder"
+    avatar-frame: "avatar_frame_folder"
+  admin-email: numberzero0909@gmail.com
+  frontend:
+    domain: ${FRONTEND_DOMAIN:localhost:5173}

@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reading-comic-backend-config-map
+  namespace: reading-comic
+
+data:
+  application.yml: |
+    server:
+      port: ${PORT:8080}
+      servlet:
+        context-path: /api
+
+    spring:
+      datasource:
+        url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+        driverClassName: org.postgresql.Driver
+        username: ${POSTGRES_USER}
+        password: ${POSTGRES_PASSWORD}
+
+      jpa:
+        hibernate:
+          ddl-auto: update
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+
+      redis:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+        timeout: 10000
+        lettuce:
+          pool:
+            max-active: 4
+            max-idle: 4
+            min-idle: 0
+            timeout: 2000ms
+        connect-timeout: 2000ms
+    app:
+      brevo:
+        apikey: ${BREVO_API_KEY}
+        url: https://api.brevo.com
+      s3:
+        bucket-name: ${AWS_S3_BUCKET_NAME}
+        region: ${AWS_REGION}
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      jwt:
+        secretKey: ${JWT_SECRET_KEY}
+        access-duration: 3600 # in seconds
+        refreshable-duration: 36000
+      folder:
+        avatar: "avatar_folder"
+        chapter: "chapter_folder"
+        story: "story_folder"
+        avatar-frame: "avatar_frame_folder"
+      admin-email: numberzero0909@gmail.com
+      frontend:
+        url: ${FRONTEND_URL:http://localhost:3000}
