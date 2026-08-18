@@ -23,14 +23,12 @@ import com.viettran.reading_story_web.entity.mysql.Chapter;
 import com.viettran.reading_story_web.entity.mysql.Follow;
 import com.viettran.reading_story_web.entity.mysql.Genre;
 import com.viettran.reading_story_web.entity.mysql.Story;
-import com.viettran.reading_story_web.entity.redis.StoryCache;
 import com.viettran.reading_story_web.enums.Gender;
 import com.viettran.reading_story_web.exception.AppException;
 import com.viettran.reading_story_web.exception.ErrorCode;
 import com.viettran.reading_story_web.mapper.ChapterMapper;
 import com.viettran.reading_story_web.mapper.StoryMapper;
 import com.viettran.reading_story_web.repository.jpa.*;
-import com.viettran.reading_story_web.repository.redis.StoryCacheRepository;
 import com.viettran.reading_story_web.scheduler.StoryJobScheduler;
 import com.viettran.reading_story_web.utils.DateTimeFormatUtil;
 
@@ -60,8 +58,6 @@ public class StoryService {
 
     DateTimeFormatUtil dateTimeFormatUtil;
 
-    StoryCacheRepository storyCacheRepository;
-
     StoryJobScheduler storyJobScheduler;
     RedisCacheAsideService redisCacheAsideService;
 
@@ -89,27 +85,19 @@ public class StoryService {
     }
 
     public PageResponse<StoryResponse> getStories(int page, int size) {
-        String cacheKey = "cache:story:list:page:" + page + ":size:" + size;
-        PageResponse<StoryResponse> cached = redisCacheAsideService.getOrLoad(
-                cacheKey, new com.fasterxml.jackson.core.type.TypeReference<PageResponse<StoryResponse>>() {}, () -> {
-                    Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
-                    Pageable pageable = PageRequest.of(page - 1, size, sorting);
+        Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page - 1, size, sorting);
 
-                    Page<Story> pageData = storyRepository.findAll(pageable);
-                    List<Story> stories = pageData.getContent();
+        Page<Story> pageData = storyRepository.findAll(pageable);
+        List<StoryResponse> storyResponses = maptoStoryResponseList(pageData.getContent());
 
-                    List<StoryResponse> storyResponses = maptoStoryResponseList(stories);
-
-                    return PageResponse.<StoryResponse>builder()
-                            .currentPage(page)
-                            .pageSize(pageData.getSize())
-                            .totalElements(pageData.getTotalElements())
-                            .totalPages(pageData.getTotalPages())
-                            .data(storyResponses)
-                            .build();
-                });
-
-        return cached;
+        return PageResponse.<StoryResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .data(storyResponses)
+                .build();
     }
 
     public StoryResponse getStoryById(Integer storyId) {
@@ -170,7 +158,6 @@ public class StoryService {
                                 Set<String> genres = genresByStoryId.getOrDefault(story.getId(), Set.of());
                                 StoryResponse storyResponse = storyMapper.toStoryResponse(story);
                                 storyResponse.setGenres(genres);
-
                                 return storyResponse;
                             })
                             .toList();
@@ -211,67 +198,47 @@ public class StoryService {
     }
 
     public PageResponse<StoryResponse> getStoriesByGender(int page, int size, Gender gender) {
-        String cacheKey = RedisCacheAsideService.storyGenderKey(gender.name(), page, size);
-        return redisCacheAsideService.getOrLoad(
-                cacheKey, new com.fasterxml.jackson.core.type.TypeReference<PageResponse<StoryResponse>>() {}, () -> {
-                    Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
-                    Pageable pageable = PageRequest.of(page - 1, size, sorting);
+        Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page - 1, size, sorting);
 
-                    Page<Story> pageData = storyRepository.findByGenderNot(gender, pageable);
-                    List<Story> stories = pageData.getContent();
+        Page<Story> pageData = storyRepository.findByGenderNot(gender, pageable);
+        List<StoryResponse> storyResponses = maptoStoryResponseList(pageData.getContent());
 
-                    List<StoryResponse> storyResponses = maptoStoryResponseList(stories);
-
-                    return PageResponse.<StoryResponse>builder()
-                            .currentPage(page)
-                            .pageSize(pageData.getSize())
-                            .totalElements(pageData.getTotalElements())
-                            .totalPages(pageData.getTotalPages())
-                            .data(storyResponses)
-                            .build();
-                });
+        return PageResponse.<StoryResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .data(storyResponses)
+                .build();
     }
 
     public PageResponse<StoryResponse> getHotStories(int page, int size) {
-        String cacheKey = RedisCacheAsideService.storyHotKey(page, size);
-        return redisCacheAsideService.getOrLoad(
-                cacheKey, new com.fasterxml.jackson.core.type.TypeReference<PageResponse<StoryResponse>>() {}, () -> {
-                    Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
-                    Pageable pageable = PageRequest.of(page - 1, size, sorting);
+        Sort sorting = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page - 1, size, sorting);
 
-                    Page<Story> pageData = storyRepository.findByHotTrue(pageable);
-                    List<Story> stories = pageData.getContent();
+        Page<Story> pageData = storyRepository.findByHotTrue(pageable);
+        List<StoryResponse> storyResponses = maptoStoryResponseList(pageData.getContent());
 
-                    List<StoryResponse> storyResponses = maptoStoryResponseList(stories);
-
-                    return PageResponse.<StoryResponse>builder()
-                            .currentPage(page)
-                            .pageSize(pageData.getSize())
-                            .totalElements(pageData.getTotalElements())
-                            .totalPages(pageData.getTotalPages())
-                            .data(storyResponses)
-                            .build();
-                });
+        return PageResponse.<StoryResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .data(storyResponses)
+                .build();
     }
 
     public List<StoryResponse> getTop10StoriesByViewCount() {
-
-        Iterable<StoryCache> iterable = storyCacheRepository.findAll();
-        if (!iterable.iterator().hasNext() || iterable.iterator().next() == null) {
-            Pageable pageable = PageRequest.of(0, 10);
-            List<Story> topStories = storyRepository.findTop10ByOrderByViewCountDesc(pageable);
-
-            for (Story story : topStories) {
-                storyCacheRepository.save(storyMapper.toStoryCache(story));
-            }
-
-            return topStories.stream().map(storyMapper::toStoryResponse).toList();
-        } else {
-            List<StoryCache> cacheTopStories = new ArrayList<>();
-            iterable.forEach(cacheTopStories::add);
-
-            return cacheTopStories.stream().map(storyMapper::toStoryResponse).toList();
-        }
+        String cacheKey = RedisCacheAsideService.storyTop10Key();
+        return redisCacheAsideService.getOrLoad(
+                cacheKey,
+                new com.fasterxml.jackson.core.type.TypeReference<List<StoryResponse>>() {},
+                () -> {
+                    Pageable pageable = PageRequest.of(0, 10);
+                    List<Story> topStories = storyRepository.findTop10ByOrderByViewCountDesc(pageable);
+                    return topStories.stream().map(storyMapper::toStoryResponse).toList();
+                });
     }
 
     public List<FollowResponse> getFollowedStories() {

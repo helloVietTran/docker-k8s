@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisCacheAsideService {
     private static final Logger log = LoggerFactory.getLogger(RedisCacheAsideService.class);
-    private static final Duration BASE_TTL = Duration.ofMinutes(1);
-    private static final Duration MAX_JITTER = Duration.ofMinutes(1);
+    private static final Duration BASE_TTL = Duration.ofHours(5);
+    private static final Duration MAX_JITTER = Duration.ofMinutes(30);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
@@ -38,28 +38,16 @@ public class RedisCacheAsideService {
         return "cache:story:detail:" + storyId;
     }
 
-    public static String storyListKey(String suffix) {
-        return "cache:story:list:" + suffix;
+    public static String storyTop10Key() {
+        return "cache:story:top10";
     }
 
     public static String storySearchKey(String keyword, int page, int size) {
         return "cache:story:search:" + normalizeKey(keyword) + ":page:" + page + ":size:" + size;
     }
 
-    public static String storyGenderKey(String gender, int page, int size) {
-        return "cache:story:gender:" + normalizeKey(gender) + ":page:" + page + ":size:" + size;
-    }
-
-    public static String storyHotKey(int page, int size) {
-        return "cache:story:hot:page:" + page + ":size:" + size;
-    }
-
     public static String chapterDetailKey(String chapterId) {
         return "cache:chapter:detail:" + chapterId;
-    }
-
-    public static String chapterListKey(Integer storyId, int page, int size) {
-        return "cache:chapter:list:story:" + storyId + ":page:" + page + ":size:" + size;
     }
 
     public static String chapterAllKey(Integer storyId) {
@@ -76,8 +64,12 @@ public class RedisCacheAsideService {
             String json = objectMapper.writeValueAsString(value);
             redisTemplate.opsForValue().set(key, json, randomTtl(BASE_TTL, MAX_JITTER));
         } catch (JsonProcessingException e) {
-            log.error("time={} - service=redis-cache-aside - info=cache - message=Cache serialization failed cacheName={} cacheKey={} eventType=ERROR",
-                    java.time.LocalDateTime.now(), extractCacheName(key), key, e);
+            log.error(
+                    "time={} - service=redis-cache-aside - info=cache - message=Cache serialization failed cacheName={} cacheKey={} eventType=ERROR",
+                    java.time.LocalDateTime.now(),
+                    extractCacheName(key),
+                    key,
+                    e);
             return;
         }
         long executionTimeMs = System.currentTimeMillis() - start;
@@ -161,8 +153,8 @@ public class RedisCacheAsideService {
         return value;
     }
 
-    public void evictStoryCaches() {
-        evictByPrefix("cache:story:");
+    public void evictStoryDetail(Integer storyId) {
+        evictByPrefix("cache:story:detail:" + storyId);
     }
 
     public void evictChapterCaches() {
@@ -170,8 +162,10 @@ public class RedisCacheAsideService {
     }
 
     public void evictAllStoryAndChapterCaches() {
-        evictStoryCaches();
-        evictChapterCaches();
+        evictByPrefix("cache:story:detail:");
+        evictByPrefix("cache:story:search:");
+        evictByPrefix("cache:story:top10");
+        evictByPrefix("cache:chapter:");
     }
 
     private void evictByPrefix(String prefix) {

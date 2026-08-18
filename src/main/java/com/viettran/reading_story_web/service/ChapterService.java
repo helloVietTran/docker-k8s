@@ -111,32 +111,27 @@ public class ChapterService {
     }
 
     public PageResponse<ChapterResponse> getChapters(Integer storyId, int page, int size) {
-        String cacheKey = RedisCacheAsideService.chapterListKey(storyId, page, size);
-        return redisCacheAsideService.getOrLoad(
-                cacheKey, new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ChapterResponse>>() {}, () -> {
-                    Sort sort = Sort.by("createdAt").descending();
+        Sort sort = Sort.by("createdAt").descending();
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
 
-                    Pageable pageable = PageRequest.of(page - 1, size, sort);
+        var pageData = chapterRepository.findAllByStoryId(storyId, pageable);
 
-                    var pageData = chapterRepository.findAllByStoryId(storyId, pageable);
+        List<ChapterResponse> chapterResponseList = pageData.getContent().stream()
+                .map(chapter -> {
+                    ChapterResponse chapterResponse = chapterMapper.toChapterResponse(chapter);
+                    chapterResponse.setUpdatedAt(dateTimeFormatUtil.format(chapter.getUpdatedAt()));
+                    chapterResponse.setCreatedAt(dateTimeFormatUtil.format(chapter.getCreatedAt()));
+                    return chapterResponse;
+                })
+                .toList();
 
-                    List<ChapterResponse> chapterResponseList = pageData.getContent().stream()
-                            .map(chapter -> {
-                                ChapterResponse chapterResponse = chapterMapper.toChapterResponse(chapter);
-                                chapterResponse.setUpdatedAt(dateTimeFormatUtil.format(chapter.getUpdatedAt()));
-                                chapterResponse.setCreatedAt(dateTimeFormatUtil.format(chapter.getCreatedAt()));
-                                return chapterResponse;
-                            })
-                            .toList();
-
-                    return PageResponse.<ChapterResponse>builder()
-                            .currentPage(page)
-                            .pageSize(pageData.getSize())
-                            .totalElements(pageData.getTotalElements())
-                            .totalPages(pageData.getTotalPages())
-                            .data(chapterResponseList)
-                            .build();
-                });
+        return PageResponse.<ChapterResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .data(chapterResponseList)
+                .build();
     }
 
     public ChapterResponse getChapter(String chapterId) {
